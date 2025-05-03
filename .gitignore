@@ -3,6 +3,10 @@ node_modules/
 
 # Environment files
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 frontend/.env
 backend/.env
 
@@ -17,6 +21,14 @@ yarn-error.log*
 dist/
 frontend/dist/
 backend/dist/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Vercel
+.vercel
 
 # Dependency directories
 frontend/node_modules/

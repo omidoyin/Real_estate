@@ -1,37 +1,95 @@
-export const registerUser = async (userData) => {
-    const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-    });
-    return response.json();
+"use client";
+
+import {
+  loginUser as apiLoginUser,
+  registerUser as apiRegisterUser,
+} from "./api";
+import Cookies from "js-cookie";
+
+// Set token in both localStorage and cookies
+export const setToken = (token) => {
+  if (typeof window !== "undefined") {
+    // Set in localStorage for backward compatibility
+    localStorage.setItem("token", token);
+
+    // Set in cookies for middleware
+    Cookies.set("token", token, { expires: 7, path: "/" }); // Expires in 7 days
+  }
 };
 
+// Remove token from both localStorage and cookies
+export const removeToken = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("token");
+    Cookies.remove("token", { path: "/" });
+  }
+};
+
+// Register user
+export const registerUser = async (userData) => {
+  try {
+    const data = await apiRegisterUser(userData);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Login user
 export const loginUser = async (credentials) => {
-    const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-    });
-    const data = await response.json();
+  try {
+    const data = await apiLoginUser(credentials);
     if (data.token) {
-        localStorage.setItem('token', data.token);
+      setToken(data.token);
     }
     return data;
+  } catch (error) {
+    throw error;
+  }
 };
 
+// Logout user
 export const logoutUser = () => {
-    localStorage.removeItem('token');
+  removeToken();
+  if (typeof window !== "undefined") {
+    window.location.href = "/auth/login";
+  }
 };
 
+// Check if user is authenticated
 export const isAuthenticated = () => {
-    return localStorage.getItem('token') !== null;
+  if (typeof window !== "undefined") {
+    return !!Cookies.get("token");
+  }
+  return false;
 };
 
+// Get token
 export const getToken = () => {
-    return localStorage.getItem('token');
+  if (typeof window !== "undefined") {
+    return Cookies.get("token");
+  }
+  return null;
+};
+
+// Admin authentication
+export const setAdminToken = (token) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("adminToken", token);
+    Cookies.set("adminToken", token, { expires: 7, path: "/" });
+  }
+};
+
+export const removeAdminToken = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("adminToken");
+    Cookies.remove("adminToken", { path: "/" });
+  }
+};
+
+export const isAdminAuthenticated = () => {
+  if (typeof window !== "undefined") {
+    return !!Cookies.get("adminToken");
+  }
+  return false;
 };
