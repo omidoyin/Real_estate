@@ -230,6 +230,74 @@ export const getUserProfile = async (userId) => {
   return response.data;
 };
 
+// Service Details API Functions
+export const getEstateManagementDetails = async (serviceId) => {
+  // Use caching for service details (10 minutes TTL)
+  return getCachedOrFetch(
+    `estate-management-details-${serviceId}`,
+    async () => {
+      const response = await api.get(
+        `/services/estate-management/${serviceId}`
+      );
+      return response.data;
+    },
+    10 * 60 * 1000
+  );
+};
+
+export const getArchitecturalDesignDetails = async (serviceId) => {
+  // Use caching for service details (10 minutes TTL)
+  return getCachedOrFetch(
+    `architectural-design-details-${serviceId}`,
+    async () => {
+      const response = await api.get(
+        `/services/architectural-design/${serviceId}`
+      );
+      return response.data;
+    },
+    10 * 60 * 1000
+  );
+};
+
+export const getLandSurveyDetails = async (serviceId) => {
+  // Use caching for service details (10 minutes TTL)
+  return getCachedOrFetch(
+    `land-survey-details-${serviceId}`,
+    async () => {
+      const response = await api.get(`/services/land-survey/${serviceId}`);
+      return response.data;
+    },
+    10 * 60 * 1000
+  );
+};
+
+export const getGeneralContractsDetails = async (serviceId) => {
+  // Use caching for service details (10 minutes TTL)
+  return getCachedOrFetch(
+    `general-contracts-details-${serviceId}`,
+    async () => {
+      const response = await api.get(
+        `/services/general-contracts/${serviceId}`
+      );
+      return response.data;
+    },
+    10 * 60 * 1000
+  );
+};
+
+// Houses API Functions
+export const getHouseDetails = async (houseId) => {
+  // Use caching for house details (10 minutes TTL)
+  return getCachedOrFetch(
+    `house-details-${houseId}`,
+    async () => {
+      const response = await api.get(`/houses/${houseId}`);
+      return response.data;
+    },
+    10 * 60 * 1000
+  );
+};
+
 // Mark Payment as Completed
 export const markPaymentCompleted = async (paymentId) => {
   const response = await api.put(`/payments/${paymentId}/complete`);

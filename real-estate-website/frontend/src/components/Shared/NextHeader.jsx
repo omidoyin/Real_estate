@@ -58,8 +58,8 @@ export default function Header() {
           <Link href="/about" className="hover:text-accent-green">
             About
           </Link>
-          <Link href="/lands/available" className="hover:text-accent-green">
-            Available Lands
+          <Link href="/portfolio" className="hover:text-accent-green">
+            Portfolio
           </Link>
           <Link href="/why-us" className="hover:text-accent-green">
             Why Us
@@ -149,8 +149,8 @@ export default function Header() {
             <Link href="/about" className="hover:text-accent-green">
               About
             </Link>
-            <Link href="/lands/available" className="hover:text-accent-green">
-              Available Lands
+            <Link href="/portfolio" className="hover:text-accent-green">
+              Portfolio
             </Link>
             <Link href="/why-us" className="hover:text-accent-green">
               Why Us

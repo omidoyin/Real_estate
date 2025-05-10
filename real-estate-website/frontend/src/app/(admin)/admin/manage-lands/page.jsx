@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import Image from "next/image";
 
 export default function ManageLands() {
   const [properties, setProperties] = useState([]);
@@ -18,7 +19,17 @@ export default function ManageLands() {
     type: "Residential",
     area: "",
     description: "",
+    features: [],
+    landmarks: [],
+    documents: [],
+    images: [],
+    brochure: null,
   });
+
+  // Refs for file inputs
+  const imageInputRef = useRef(null);
+  const brochureInputRef = useRef(null);
+  const documentInputRef = useRef(null);
   const [formErrors, setFormErrors] = useState({});
   const router = useRouter();
 
@@ -37,6 +48,138 @@ export default function ManageLands() {
         [name]: "",
       });
     }
+  };
+
+  // Handle feature input
+  const handleFeatureInput = (e, index) => {
+    const newFeatures = [...formData.features];
+    newFeatures[index] = e.target.value;
+    setFormData({
+      ...formData,
+      features: newFeatures,
+    });
+  };
+
+  // Add new feature field
+  const addFeature = () => {
+    setFormData({
+      ...formData,
+      features: [...formData.features, ""],
+    });
+  };
+
+  // Remove feature field
+  const removeFeature = (index) => {
+    const newFeatures = [...formData.features];
+    newFeatures.splice(index, 1);
+    setFormData({
+      ...formData,
+      features: newFeatures,
+    });
+  };
+
+  // Handle landmark input
+  const handleLandmarkInput = (e, index) => {
+    const newLandmarks = [...formData.landmarks];
+    newLandmarks[index] = e.target.value;
+    setFormData({
+      ...formData,
+      landmarks: newLandmarks,
+    });
+  };
+
+  // Add new landmark field
+  const addLandmark = () => {
+    setFormData({
+      ...formData,
+      landmarks: [...formData.landmarks, ""],
+    });
+  };
+
+  // Remove landmark field
+  const removeLandmark = (index) => {
+    const newLandmarks = [...formData.landmarks];
+    newLandmarks.splice(index, 1);
+    setFormData({
+      ...formData,
+      landmarks: newLandmarks,
+    });
+  };
+
+  // Handle document input
+  const handleDocumentInput = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setFormData({
+        ...formData,
+        documents: [...formData.documents, ...newFiles],
+      });
+    }
+  };
+
+  // Remove document
+  const removeDocument = (index) => {
+    const newDocuments = [...formData.documents];
+    newDocuments.splice(index, 1);
+    setFormData({
+      ...formData,
+      documents: newDocuments,
+    });
+  };
+
+  // Handle image input
+  const handleImageInput = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+
+      // Create preview URLs for the images
+      const newImages = newFiles.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+
+      setFormData({
+        ...formData,
+        images: [...formData.images, ...newImages],
+      });
+    }
+  };
+
+  // Remove image
+  const removeImage = (index) => {
+    // Revoke the object URL to avoid memory leaks
+    if (formData.images[index].preview) {
+      URL.revokeObjectURL(formData.images[index].preview);
+    }
+
+    const newImages = [...formData.images];
+    newImages.splice(index, 1);
+    setFormData({
+      ...formData,
+      images: newImages,
+    });
+  };
+
+  // Handle brochure input
+  const handleBrochureInput = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setFormData({
+        ...formData,
+        brochure: {
+          file,
+          name: file.name,
+        },
+      });
+    }
+  };
+
+  // Remove brochure
+  const removeBrochure = () => {
+    setFormData({
+      ...formData,
+      brochure: null,
+    });
   };
 
   // Validate form
@@ -70,6 +213,11 @@ export default function ManageLands() {
       type: "Residential",
       area: "",
       description: "",
+      features: [],
+      landmarks: [],
+      documents: [],
+      images: [],
+      brochure: null,
     });
     setFormErrors({});
     setIsAddModalOpen(true);
@@ -85,6 +233,11 @@ export default function ManageLands() {
       type: property.type,
       area: property.area,
       description: property.description || "",
+      features: property.features || [],
+      landmarks: property.landmarks || [],
+      documents: property.documents || [],
+      images: property.images || [],
+      brochure: property.brochure || null,
     });
     setFormErrors({});
     setIsEditModalOpen(true);
@@ -111,8 +264,31 @@ export default function ManageLands() {
       return;
     }
 
-    // In a real app, this would be an API call
+    // In a real app, this would be an API call with FormData to handle file uploads
     // For demo purposes, just add to the state
+
+    // Process images for the demo (in a real app, you'd upload these to a server)
+    const processedImages = formData.images.map((img) => ({
+      url: img.preview,
+      alt: "Property image",
+    }));
+
+    // Process documents for the demo
+    const processedDocuments = formData.documents.map((doc) => ({
+      name: doc.name,
+      type: doc.type,
+      size: doc.size,
+    }));
+
+    // Process brochure for the demo
+    const processedBrochure = formData.brochure
+      ? {
+          name: formData.brochure.name,
+          type: formData.brochure.file.type,
+          size: formData.brochure.file.size,
+        }
+      : null;
+
     const newProperty = {
       id: properties.length + 1,
       title: formData.title,
@@ -121,6 +297,11 @@ export default function ManageLands() {
       type: formData.type,
       area: formData.area,
       description: formData.description,
+      features: formData.features,
+      landmarks: formData.landmarks,
+      documents: processedDocuments,
+      images: processedImages,
+      brochure: processedBrochure,
       createdAt: new Date().toISOString().split("T")[0],
     };
 
@@ -139,6 +320,44 @@ export default function ManageLands() {
       return;
     }
 
+    // Process images for the demo (in a real app, you'd upload these to a server)
+    const processedImages = formData.images.map((img) => {
+      // If it's a new image (has a file property), use the preview URL
+      if (img.file) {
+        return {
+          url: img.preview,
+          alt: "Property image",
+        };
+      }
+      // If it's an existing image, just return it as is
+      return img;
+    });
+
+    // Process documents for the demo
+    const processedDocuments = formData.documents.map((doc) => {
+      // If it's a new document (has a File object properties), process it
+      if (doc instanceof File) {
+        return {
+          name: doc.name,
+          type: doc.type,
+          size: doc.size,
+        };
+      }
+      // If it's an existing document, just return it as is
+      return doc;
+    });
+
+    // Process brochure for the demo
+    const processedBrochure = formData.brochure
+      ? formData.brochure.file
+        ? {
+            name: formData.brochure.name,
+            type: formData.brochure.file.type,
+            size: formData.brochure.file.size,
+          }
+        : formData.brochure
+      : null;
+
     // In a real app, this would be an API call
     // For demo purposes, just update the state
     const updatedProperties = properties.map((property) => {
@@ -151,6 +370,11 @@ export default function ManageLands() {
           type: formData.type,
           area: formData.area,
           description: formData.description,
+          features: formData.features,
+          landmarks: formData.landmarks,
+          documents: processedDocuments,
+          images: processedImages,
+          brochure: processedBrochure,
         };
       }
       return property;
@@ -397,7 +621,7 @@ export default function ManageLands() {
       {/* Add Property Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Add New Property</h2>
               <button
@@ -422,138 +646,452 @@ export default function ManageLands() {
             </div>
 
             <form onSubmit={handleAddProperty}>
-              <div className="mb-4">
-                <label
-                  htmlFor="title"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
-                    formErrors.title ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.title && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.title}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  htmlFor="price"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Price ($)
-                </label>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
-                    formErrors.price ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.price && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.price}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label
-                    htmlFor="status"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Status
-                  </label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
-                  >
-                    <option value="Available">Available</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Reserved">Reserved</option>
-                  </select>
+                  {/* Basic Information Section */}
+                  <h3 className="text-lg font-semibold mb-4">
+                    Basic Information
+                  </h3>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="title"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Title*
+                    </label>
+                    <input
+                      type="text"
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                        formErrors.title ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.title && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.title}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="price"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Price ($)*
+                    </label>
+                    <input
+                      type="number"
+                      id="price"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                        formErrors.price ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.price && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.price}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label
+                        htmlFor="status"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Status
+                      </label>
+                      <select
+                        id="status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                      >
+                        <option value="Available">Available</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Reserved">Reserved</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="type"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Type
+                      </label>
+                      <select
+                        id="type"
+                        name="type"
+                        value={formData.type}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                      >
+                        <option value="Residential">Residential</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Industrial">Industrial</option>
+                        <option value="Agricultural">Agricultural</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="area"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Area*
+                    </label>
+                    <input
+                      type="text"
+                      id="area"
+                      name="area"
+                      value={formData.area}
+                      onChange={handleInputChange}
+                      placeholder="e.g., 500 sqm"
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                        formErrors.area ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.area && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.area}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <label
+                      htmlFor="description"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Description
+                    </label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows="4"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    ></textarea>
+                  </div>
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="type"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Type
-                  </label>
-                  <select
-                    id="type"
-                    name="type"
-                    value={formData.type}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
-                  >
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Industrial">Industrial</option>
-                    <option value="Agricultural">Agricultural</option>
-                  </select>
+                  {/* Features Section */}
+                  <h3 className="text-lg font-semibold mb-4">
+                    Features & Landmarks
+                  </h3>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Features
+                    </label>
+                    {formData.features.map((feature, index) => (
+                      <div key={index} className="flex mb-2">
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={(e) => handleFeatureInput(e, index)}
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                          placeholder="e.g., Swimming Pool"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFeature(index)}
+                          className="ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addFeature}
+                      className="mt-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add Feature
+                    </button>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Nearby Landmarks
+                    </label>
+                    {formData.landmarks.map((landmark, index) => (
+                      <div key={index} className="flex mb-2">
+                        <input
+                          type="text"
+                          value={landmark}
+                          onChange={(e) => handleLandmarkInput(e, index)}
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                          placeholder="e.g., Shopping Mall (2km)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeLandmark(index)}
+                          className="ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addLandmark}
+                      className="mt-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add Landmark
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label
-                  htmlFor="area"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Area
-                </label>
-                <input
-                  type="text"
-                  id="area"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 500 sqm"
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
-                    formErrors.area ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.area && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.area}</p>
-                )}
+              {/* Documents and Images Section */}
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">
+                  Documents & Images
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Land Documents
+                    </label>
+                    <div className="mb-2">
+                      <input
+                        type="file"
+                        ref={documentInputRef}
+                        onChange={handleDocumentInput}
+                        className="hidden"
+                        multiple
+                        accept=".pdf,.doc,.docx"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => documentInputRef.current.click()}
+                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                      >
+                        Upload Documents
+                      </button>
+                    </div>
+
+                    {formData.documents.length > 0 && (
+                      <ul className="mt-2 border border-gray-200 rounded-md divide-y">
+                        {formData.documents.map((doc, index) => (
+                          <li
+                            key={index}
+                            className="flex justify-between items-center p-3"
+                          >
+                            <div className="flex items-center">
+                              <svg
+                                className="w-5 h-5 mr-2 text-gray-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                              <span className="text-sm truncate max-w-xs">
+                                {doc.name}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeDocument(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Brochure
+                    </label>
+                    <div className="mb-2">
+                      <input
+                        type="file"
+                        ref={brochureInputRef}
+                        onChange={handleBrochureInput}
+                        className="hidden"
+                        accept=".pdf"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => brochureInputRef.current.click()}
+                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                      >
+                        Upload Brochure
+                      </button>
+                    </div>
+
+                    {formData.brochure && (
+                      <div className="mt-2 border border-gray-200 rounded-md p-3 flex justify-between items-center">
+                        <div className="flex items-center">
+                          <svg
+                            className="w-5 h-5 mr-2 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          <span className="text-sm truncate max-w-xs">
+                            {formData.brochure.name}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeBrochure}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Property Images
+                  </label>
+                  <div className="mb-2">
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      onChange={handleImageInput}
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current.click()}
+                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Upload Images
+                    </button>
+                  </div>
+
+                  {formData.images.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {formData.images.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden">
+                            <img
+                              src={img.preview}
+                              alt={`Preview ${index}`}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="mb-6">
-                <label
-                  htmlFor="description"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
-                ></textarea>
-              </div>
-
-              <div className="flex justify-end">
+              <div className="flex justify-end mt-6">
                 <button
                   type="button"
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 mr-2"
@@ -576,7 +1114,7 @@ export default function ManageLands() {
       {/* Edit Property Modal */}
       {isEditModalOpen && currentProperty && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Edit Property</h2>
               <button
@@ -601,138 +1139,454 @@ export default function ManageLands() {
             </div>
 
             <form onSubmit={handleEditProperty}>
-              <div className="mb-4">
-                <label
-                  htmlFor="edit-title"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id="edit-title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
-                    formErrors.title ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.title && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.title}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  htmlFor="edit-price"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Price ($)
-                </label>
-                <input
-                  type="number"
-                  id="edit-price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
-                    formErrors.price ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.price && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.price}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label
-                    htmlFor="edit-status"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Status
-                  </label>
-                  <select
-                    id="edit-status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
-                  >
-                    <option value="Available">Available</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Reserved">Reserved</option>
-                  </select>
+                  {/* Basic Information Section */}
+                  <h3 className="text-lg font-semibold mb-4">
+                    Basic Information
+                  </h3>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="edit-title"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Title*
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                        formErrors.title ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.title && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.title}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="edit-price"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Price ($)*
+                    </label>
+                    <input
+                      type="number"
+                      id="edit-price"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                        formErrors.price ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.price && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.price}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label
+                        htmlFor="edit-status"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Status
+                      </label>
+                      <select
+                        id="edit-status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                      >
+                        <option value="Available">Available</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Reserved">Reserved</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="edit-type"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Type
+                      </label>
+                      <select
+                        id="edit-type"
+                        name="type"
+                        value={formData.type}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                      >
+                        <option value="Residential">Residential</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Industrial">Industrial</option>
+                        <option value="Agricultural">Agricultural</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="edit-area"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Area*
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-area"
+                      name="area"
+                      value={formData.area}
+                      onChange={handleInputChange}
+                      placeholder="e.g., 500 sqm"
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                        formErrors.area ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.area && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.area}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <label
+                      htmlFor="edit-description"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Description
+                    </label>
+                    <textarea
+                      id="edit-description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows="4"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    ></textarea>
+                  </div>
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="edit-type"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Type
-                  </label>
-                  <select
-                    id="edit-type"
-                    name="type"
-                    value={formData.type}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
-                  >
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Industrial">Industrial</option>
-                    <option value="Agricultural">Agricultural</option>
-                  </select>
+                  {/* Features Section */}
+                  <h3 className="text-lg font-semibold mb-4">
+                    Features & Landmarks
+                  </h3>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Features
+                    </label>
+                    {formData.features.map((feature, index) => (
+                      <div key={index} className="flex mb-2">
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={(e) => handleFeatureInput(e, index)}
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                          placeholder="e.g., Swimming Pool"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFeature(index)}
+                          className="ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addFeature}
+                      className="mt-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add Feature
+                    </button>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Nearby Landmarks
+                    </label>
+                    {formData.landmarks.map((landmark, index) => (
+                      <div key={index} className="flex mb-2">
+                        <input
+                          type="text"
+                          value={landmark}
+                          onChange={(e) => handleLandmarkInput(e, index)}
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                          placeholder="e.g., Shopping Mall (2km)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeLandmark(index)}
+                          className="ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addLandmark}
+                      className="mt-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add Landmark
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label
-                  htmlFor="edit-area"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Area
-                </label>
-                <input
-                  type="text"
-                  id="edit-area"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 500 sqm"
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
-                    formErrors.area ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.area && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.area}</p>
-                )}
+              {/* Documents and Images Section */}
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">
+                  Documents & Images
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Land Documents
+                    </label>
+                    <div className="mb-2">
+                      <input
+                        type="file"
+                        ref={documentInputRef}
+                        onChange={handleDocumentInput}
+                        className="hidden"
+                        multiple
+                        accept=".pdf,.doc,.docx"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => documentInputRef.current.click()}
+                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                      >
+                        Upload Documents
+                      </button>
+                    </div>
+
+                    {formData.documents.length > 0 && (
+                      <ul className="mt-2 border border-gray-200 rounded-md divide-y">
+                        {formData.documents.map((doc, index) => (
+                          <li
+                            key={index}
+                            className="flex justify-between items-center p-3"
+                          >
+                            <div className="flex items-center">
+                              <svg
+                                className="w-5 h-5 mr-2 text-gray-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                              <span className="text-sm truncate max-w-xs">
+                                {doc.name ? doc.name : `Document ${index + 1}`}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeDocument(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Brochure
+                    </label>
+                    <div className="mb-2">
+                      <input
+                        type="file"
+                        ref={brochureInputRef}
+                        onChange={handleBrochureInput}
+                        className="hidden"
+                        accept=".pdf"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => brochureInputRef.current.click()}
+                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                      >
+                        {formData.brochure
+                          ? "Replace Brochure"
+                          : "Upload Brochure"}
+                      </button>
+                    </div>
+
+                    {formData.brochure && (
+                      <div className="mt-2 border border-gray-200 rounded-md p-3 flex justify-between items-center">
+                        <div className="flex items-center">
+                          <svg
+                            className="w-5 h-5 mr-2 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          <span className="text-sm truncate max-w-xs">
+                            {formData.brochure.name}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeBrochure}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Property Images
+                  </label>
+                  <div className="mb-2">
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      onChange={handleImageInput}
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current.click()}
+                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add More Images
+                    </button>
+                  </div>
+
+                  {formData.images.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {formData.images.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden">
+                            <img
+                              src={img.preview || img.url}
+                              alt={img.alt || `Property image ${index + 1}`}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="mb-6">
-                <label
-                  htmlFor="edit-description"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="edit-description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
-                ></textarea>
-              </div>
-
-              <div className="flex justify-end">
+              <div className="flex justify-end mt-6">
                 <button
                   type="button"
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 mr-2"
@@ -755,7 +1609,7 @@ export default function ManageLands() {
       {/* View Property Modal */}
       {isViewModalOpen && currentProperty && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">{currentProperty.title}</h2>
               <button
@@ -781,28 +1635,61 @@ export default function ManageLands() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <div className="bg-gray-200 h-48 rounded-md flex items-center justify-center mb-4">
-                  <svg
-                    className="w-16 h-16 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M9 22V12h6v10"
-                    />
-                  </svg>
-                </div>
+                {currentProperty.images && currentProperty.images.length > 0 ? (
+                  <div className="mb-6">
+                    <div className="bg-gray-100 rounded-md overflow-hidden h-48 mb-4">
+                      <img
+                        src={currentProperty.images[0].url}
+                        alt={
+                          currentProperty.images[0].alt || "Property main image"
+                        }
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    {currentProperty.images.length > 1 && (
+                      <div className="grid grid-cols-4 gap-2">
+                        {currentProperty.images
+                          .slice(1, 5)
+                          .map((image, index) => (
+                            <div
+                              key={index}
+                              className="bg-gray-100 rounded-md overflow-hidden h-20"
+                            >
+                              <img
+                                src={image.url}
+                                alt={image.alt || `Property image ${index + 2}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-gray-200 h-48 rounded-md flex items-center justify-center mb-4">
+                    <svg
+                      className="w-16 h-16 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M9 22V12h6v10"
+                      />
+                    </svg>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-100 p-3 rounded-md">
@@ -830,6 +1717,36 @@ export default function ManageLands() {
                     </p>
                   </div>
                 </div>
+
+                {currentProperty.features &&
+                  currentProperty.features.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold mb-2">Features</h3>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {currentProperty.features.map((feature, index) => (
+                          <li key={index} className="text-gray-600">
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                {currentProperty.landmarks &&
+                  currentProperty.landmarks.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold mb-2">
+                        Nearby Landmarks
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {currentProperty.landmarks.map((landmark, index) => (
+                          <li key={index} className="text-gray-600">
+                            {landmark}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
 
               <div>
@@ -858,6 +1775,61 @@ export default function ManageLands() {
                     </li>
                   </ul>
                 </div>
+
+                {currentProperty.documents &&
+                  currentProperty.documents.length > 0 && (
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                      <h3 className="text-lg font-semibold mb-2">Documents</h3>
+                      <ul className="border border-gray-200 rounded-md divide-y">
+                        {currentProperty.documents.map((doc, index) => (
+                          <li key={index} className="flex items-center p-3">
+                            <svg
+                              className="w-5 h-5 mr-2 text-gray-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                              />
+                            </svg>
+                            <span className="text-sm text-gray-600">
+                              {doc.name || `Document ${index + 1}`}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                {currentProperty.brochure && (
+                  <div className="border-t border-gray-200 pt-4 mt-4">
+                    <h3 className="text-lg font-semibold mb-2">Brochure</h3>
+                    <div className="border border-gray-200 rounded-md p-3 flex items-center">
+                      <svg
+                        className="w-5 h-5 mr-2 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <span className="text-sm text-gray-600">
+                        {currentProperty.brochure.name}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-6 flex justify-end space-x-2">
                   <button
