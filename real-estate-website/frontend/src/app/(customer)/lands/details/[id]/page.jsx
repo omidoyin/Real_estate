@@ -5,47 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   getLandDetails,
-  addToFavorites,
-  removeFromFavorites,
+  addLandToFavorites,
+  removeLandFromFavorites,
+  getFavoriteLands,
 } from "../../../../../utils/api";
 import { isAuthenticated } from "../../../../../utils/auth";
-
-// Function to fetch mock land details
-async function fetchLandDetailsFromAPI(id) {
-  // In a real app, this would fetch from your API
-  // For now, we'll return mock data based on the ID
-  const landDetails = {
-    id: parseInt(id),
-    title: `Premium Land in Location ${id}`,
-    description:
-      "This premium land property is located in a prime area with excellent investment potential. The property features easy access to major roads, proximity to essential amenities, and is situated in a rapidly developing region.",
-    price: 250000 + parseInt(id) * 50000,
-    size: "500 sqm",
-    location: `City ${id}, State X`,
-    features: [
-      "Prime location",
-      "Clear title",
-      "Proximity to major roads",
-      "Near essential amenities",
-      "Rapidly developing area",
-      "High appreciation potential",
-    ],
-    images: ["/placeholder.jpg", "/placeholder.jpg", "/placeholder.jpg"],
-    inspectionDates: [
-      "June 15, 2023 - 10:00 AM",
-      "June 22, 2023 - 2:00 PM",
-      "June 29, 2023 - 11:00 AM",
-    ],
-    landmarks: [
-      "Shopping Mall (2km)",
-      "Hospital (3.5km)",
-      "School (1.8km)",
-      "Park (0.5km)",
-    ],
-  };
-
-  return landDetails;
-}
+import { useToast } from "../../../../../hooks/useToast";
 
 export default function LandDetails({ params }) {
   const [land, setLand] = useState(null);
@@ -54,6 +19,7 @@ export default function LandDetails({ params }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isAddingToFavorites, setIsAddingToFavorites] = useState(false);
   const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     // Check authentication status
@@ -66,23 +32,27 @@ export default function LandDetails({ params }) {
     const getLandData = async () => {
       try {
         setLoading(true);
-        // In a real app, you would use the API call
-        // const data = await getLandDetails(params.id);
+        // Get land details from API
+        const response = await getLandDetails(params.id);
+        setLand(response.data);
 
-        // For now, use the mock function
-        const data = await fetchLandDetailsFromAPI(params.id);
-        setLand(data);
-
-        // Check if this land is in favorites (in a real app)
-        // const favoritesResponse = await getFavoriteLands();
-        // const isFav = favoritesResponse.some(fav => fav.id === parseInt(params.id));
-        // setIsFavorite(isFav);
-
-        // For demo purposes, randomly set as favorite
-        setIsFavorite(Math.random() > 0.5);
+        // Check if this land is in favorites (only if user is authenticated)
+        if (isUserAuthenticated) {
+          try {
+            const favoritesResponse = await getFavoriteLands();
+            const isFav = favoritesResponse.data.some(
+              (fav) => fav._id === params.id
+            );
+            setIsFavorite(isFav);
+          } catch (favError) {
+            console.error("Error checking favorites:", favError);
+            // Non-critical error, don't show toast
+          }
+        }
       } catch (err) {
         console.error("Error fetching land details:", err);
         setError("Failed to load property details. Please try again later.");
+        showToast("Failed to load property details", "error");
       } finally {
         setLoading(false);
       }
@@ -90,12 +60,12 @@ export default function LandDetails({ params }) {
 
     checkAuth();
     getLandData();
-  }, [params.id]);
+  }, [params.id, isUserAuthenticated, showToast]);
 
   const handleToggleFavorite = async () => {
     if (!isUserAuthenticated) {
-      // Redirect to login or show login prompt
-      alert("Please log in to add properties to favorites");
+      // Show toast notification instead of alert
+      showToast("Please log in to add properties to favorites", "warning");
       return;
     }
 
@@ -103,23 +73,19 @@ export default function LandDetails({ params }) {
       setIsAddingToFavorites(true);
 
       if (isFavorite) {
-        // In a real app, you would call the API
-        // await removeFromFavorites(params.id);
-
-        // For demo purposes, just toggle the state
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
+        // Call the API to remove from favorites
+        await removeLandFromFavorites(params.id);
         setIsFavorite(false);
+        showToast("Removed from favorites", "success");
       } else {
-        // In a real app, you would call the API
-        // await addToFavorites(params.id);
-
-        // For demo purposes, just toggle the state
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
+        // Call the API to add to favorites
+        await addLandToFavorites(params.id);
         setIsFavorite(true);
+        showToast("Added to favorites", "success");
       }
     } catch (err) {
       console.error("Error toggling favorite status:", err);
-      alert("Failed to update favorites. Please try again.");
+      showToast("Failed to update favorites. Please try again.", "error");
     } finally {
       setIsAddingToFavorites(false);
     }

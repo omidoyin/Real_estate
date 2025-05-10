@@ -3,63 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useToast } from "../../../../../context/ToastContext";
+import { useToast } from "../../../../../hooks/useToast";
 import {
-  addToFavorites,
-  removeFromFavorites,
+  getHouseDetails,
+  addHouseToFavorites,
+  removeHouseFromFavorites,
+  getFavoriteHouses,
 } from "../../../../../utils/api";
 import { isAuthenticated } from "../../../../../utils/auth";
-
-// Function to fetch mock house details
-async function fetchHouseDetailsFromAPI(id) {
-  // In a real app, this would fetch from your API
-  // For now, we'll return mock data based on the ID
-  const houseDetails = {
-    id: parseInt(id),
-    title: id === "103" ? "Apartment for Rent" : `Modern House in Location ${id}`,
-    description:
-      "This beautiful property offers modern living spaces with high-quality finishes throughout. Featuring an open floor plan, abundant natural light, and premium fixtures, this home provides the perfect balance of comfort and style. The property is situated in a desirable neighborhood with easy access to schools, shopping, and recreational facilities.",
-    price: id === "103" ? 1500 : 450000 + parseInt(id) * 50000,
-    size: id === "103" ? "120 sqm" : "250 sqm",
-    location: `City ${id}, State X`,
-    bedrooms: id === "103" ? 2 : 3 + (parseInt(id) % 3),
-    bathrooms: id === "103" ? 1 : 2 + (parseInt(id) % 2),
-    status: id === "103" ? "for-rent" : "for-sale",
-    rentPeriod: id === "103" ? "monthly" : null,
-    features: [
-      "Modern design",
-      "Open floor plan",
-      "High ceilings",
-      "Energy-efficient appliances",
-      "Smart home technology",
-      "Hardwood floors",
-      "Custom cabinetry",
-      "Walk-in closets",
-      "Private backyard",
-      "Attached garage",
-    ],
-    images: ["/placeholder.jpg", "/placeholder.jpg", "/placeholder.jpg"],
-    yearBuilt: 2020 + (parseInt(id) % 3),
-    propertyType: id === "103" ? "Apartment" : "Single Family Home",
-    amenities: [
-      "Swimming pool",
-      "Fitness center",
-      "Playground",
-      "Clubhouse",
-      "Tennis court",
-      "Walking trails",
-    ],
-    nearbyPlaces: [
-      "Shopping Mall (1.5km)",
-      "Hospital (2.8km)",
-      "School (1.2km)",
-      "Park (0.5km)",
-      "Restaurant District (3km)",
-    ],
-  };
-
-  return houseDetails;
-}
 
 export default function HouseDetails({ params }) {
   const [house, setHouse] = useState(null);
@@ -72,21 +23,30 @@ export default function HouseDetails({ params }) {
 
   useEffect(() => {
     // Check if user is authenticated
-    setIsUserAuthenticated(isAuthenticated());
+    const authStatus = isAuthenticated();
+    setIsUserAuthenticated(authStatus);
 
     // Fetch house details
     const getHouseData = async () => {
       try {
         setLoading(true);
-        // In a real app, you would use the API call
-        // const data = await getHouseDetails(params.id);
+        // Get house details from API
+        const response = await getHouseDetails(params.id);
+        setHouse(response.data);
 
-        // For now, use the mock function
-        const data = await fetchHouseDetailsFromAPI(params.id);
-        setHouse(data);
-
-        // For demo purposes, randomly set as favorite
-        setIsFavorite(Math.random() > 0.5);
+        // Check if this house is in favorites (only if user is authenticated)
+        if (authStatus) {
+          try {
+            const favoritesResponse = await getFavoriteHouses();
+            const isFav = favoritesResponse.data.some(
+              (fav) => fav._id === params.id
+            );
+            setIsFavorite(isFav);
+          } catch (favError) {
+            console.error("Error checking favorites:", favError);
+            // Non-critical error, don't show toast
+          }
+        }
       } catch (err) {
         console.error("Error fetching house details:", err);
         setError("Failed to load property details. Please try again later.");
@@ -109,15 +69,13 @@ export default function HouseDetails({ params }) {
     try {
       setIsAddingToFavorites(true);
       if (isFavorite) {
-        // In a real app, you would use the API call
-        // await removeFromFavorites(house.id);
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
+        // Call the API to remove from favorites
+        await removeHouseFromFavorites(params.id);
         setIsFavorite(false);
         showToast("Removed from favorites", "success");
       } else {
-        // In a real app, you would use the API call
-        // await addToFavorites(house.id);
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
+        // Call the API to add to favorites
+        await addHouseToFavorites(params.id);
         setIsFavorite(true);
         showToast("Added to favorites", "success");
       }

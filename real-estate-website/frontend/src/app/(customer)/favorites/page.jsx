@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getFavoriteLands, removeFromFavorites } from "../../../utils/api";
+import { getFavoriteLands, removeLandFromFavorites } from "../../../utils/api";
 import { isAuthenticated } from "../../../utils/auth";
 import { useRouter } from "next/navigation";
 import SortOptions from "../../../components/Shared/SortOptions";
@@ -42,51 +42,19 @@ export default function Favorites() {
     const fetchFavorites = async () => {
       try {
         setLoading(true);
-        // In a real app, this would fetch from your API
-        // const data = await getFavoriteLands();
+        // Fetch data from the API
+        const response = await getFavoriteLands();
+        const data = response.data;
 
-        // For demo purposes, use mock data
-        const data = [
-          {
-            id: 1,
-            title: "Premium Land in Location A",
-            location: "City A, State X",
-            price: 250000,
-            size: "500 sqm",
-            image: "/placeholder.jpg",
-            addedAt: "2023-06-15",
-          },
-          {
-            id: 2,
-            title: "Exclusive Land in Location B",
-            location: "City B, State Y",
-            price: 180000,
-            size: "450 sqm",
-            image: "/placeholder.jpg",
-            addedAt: "2023-06-10",
-          },
-          {
-            id: 3,
-            title: "Strategic Land in Location C",
-            location: "City C, State Z",
-            price: 320000,
-            size: "600 sqm",
-            image: "/placeholder.jpg",
-            addedAt: "2023-06-05",
-          },
-          {
-            id: 4,
-            title: "Residential Land in Location D",
-            location: "City D, State X",
-            price: 210000,
-            size: "520 sqm",
-            image: "/placeholder.jpg",
-            addedAt: "2023-06-20",
-          },
-        ];
+        // Add addedAt property if it doesn't exist (using createdAt from the API)
+        const processedData = data.map((item) => ({
+          ...item,
+          id: item._id, // Ensure we have an id property for compatibility
+          addedAt: item.addedAt || item.createdAt || new Date().toISOString(),
+        }));
 
-        setFavorites(data);
-        setDisplayedFavorites(sortFavorites(data, sortOption));
+        setFavorites(processedData);
+        setDisplayedFavorites(sortFavorites(processedData, sortOption));
       } catch (err) {
         console.error("Error fetching favorites:", err);
         setError("Failed to load favorite properties. Please try again later.");
@@ -152,11 +120,8 @@ export default function Favorites() {
       // Show loading toast
       showToast("Removing from favorites...", "info");
 
-      // In a real app, this would call the API
-      // await removeFromFavorites(landToRemove.id);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Call the API to remove from favorites
+      await removeLandFromFavorites(landToRemove.id);
 
       // Update the favorites list
       const updatedFavorites = favorites.filter(

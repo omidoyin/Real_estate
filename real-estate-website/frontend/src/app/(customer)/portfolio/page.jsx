@@ -5,270 +5,57 @@ import Link from "next/link";
 import Image from "next/image";
 import SearchFilters from "../../../components/Lands/SearchFilters";
 import LoadingSpinner from "../../../components/Shared/LoadingSpinner";
-import { useToast } from "../../../context/ToastContext";
+import { useToast } from "../../../hooks/useToast";
 import { useRouter, useSearchParams } from "next/navigation";
-
-// Mock data for different service types
-const mockServiceData = {
-  lands: [
-    {
-      id: 1,
-      title: "Premium Land in Location A",
-      description: "Prime location with excellent investment potential",
-      price: 250000,
-      location: "City A",
-      size: "500 sqm",
-      image: "/placeholder.jpg",
-      type: "land",
-    },
-    {
-      id: 2,
-      title: "Exclusive Land in Location B",
-      description: "Scenic views with modern amenities nearby",
-      price: 180000,
-      location: "City B",
-      size: "400 sqm",
-      image: "/placeholder.jpg",
-      type: "land",
-    },
-    {
-      id: 3,
-      title: "Strategic Land in Location C",
-      description: "Perfect for commercial development",
-      price: 320000,
-      location: "City C",
-      size: "800 sqm",
-      image: "/placeholder.jpg",
-      type: "land",
-    },
-  ],
-  houses: [
-    {
-      id: 101,
-      title: "Modern 3-Bedroom House",
-      description: "Newly built house with modern amenities",
-      price: 450000,
-      location: "City A",
-      size: "250 sqm",
-      bedrooms: 3,
-      bathrooms: 2,
-      image: "/placeholder.jpg",
-      type: "house",
-      status: "for-sale",
-    },
-    {
-      id: 102,
-      title: "Luxury Villa with Pool",
-      description: "Spacious villa with private pool and garden",
-      price: 750000,
-      location: "City B",
-      size: "400 sqm",
-      bedrooms: 5,
-      bathrooms: 4,
-      image: "/placeholder.jpg",
-      type: "house",
-      status: "for-sale",
-    },
-    {
-      id: 103,
-      title: "Apartment for Rent",
-      description: "Modern apartment in the city center",
-      price: 1500,
-      location: "City C",
-      size: "120 sqm",
-      bedrooms: 2,
-      bathrooms: 1,
-      image: "/placeholder.jpg",
-      type: "house",
-      status: "for-rent",
-      rentPeriod: "monthly",
-    },
-  ],
-  estateManagement: [
-    {
-      id: 201,
-      title: "Commercial Complex Management",
-      description: "Full-service management for commercial properties",
-      location: "City A",
-      propertyType: "Commercial",
-      image: "/placeholder.jpg",
-    },
-    {
-      id: 202,
-      title: "Residential Estate Management",
-      description: "Comprehensive management services for residential estates",
-      location: "City B",
-      propertyType: "Residential",
-      image: "/placeholder.jpg",
-    },
-    {
-      id: 203,
-      title: "Mixed-Use Property Management",
-      description: "Specialized management for mixed-use developments",
-      location: "City C",
-      propertyType: "Mixed-Use",
-      image: "/placeholder.jpg",
-    },
-  ],
-  architecturalDesign: [
-    {
-      id: 301,
-      title: "Modern Residential Design",
-      description: "Contemporary design solutions for residential properties",
-      image: "/placeholder.jpg",
-      category: "Residential",
-    },
-    {
-      id: 302,
-      title: "Commercial Space Planning",
-      description: "Functional and aesthetic design for commercial spaces",
-      image: "/placeholder.jpg",
-      category: "Commercial",
-    },
-    {
-      id: 303,
-      title: "Sustainable Architecture",
-      description: "Eco-friendly design solutions for modern buildings",
-      image: "/placeholder.jpg",
-      category: "Sustainable",
-    },
-  ],
-  landSurvey: [
-    {
-      id: 401,
-      title: "Boundary Survey",
-      description: "Accurate determination of property boundaries",
-      image: "/placeholder.jpg",
-      surveyType: "Boundary",
-    },
-    {
-      id: 402,
-      title: "Topographic Survey",
-      description: "Detailed mapping of land features and elevations",
-      image: "/placeholder.jpg",
-      surveyType: "Topographic",
-    },
-    {
-      id: 403,
-      title: "Construction Survey",
-      description: "Precise measurements for construction projects",
-      image: "/placeholder.jpg",
-      surveyType: "Construction",
-    },
-  ],
-  generalContracts: [
-    {
-      id: 501,
-      title: "Residential Construction",
-      description: "Complete construction services for residential properties",
-      image: "/placeholder.jpg",
-      contractType: "Residential",
-    },
-    {
-      id: 502,
-      title: "Commercial Development",
-      description: "End-to-end development services for commercial projects",
-      image: "/placeholder.jpg",
-      contractType: "Commercial",
-    },
-    {
-      id: 503,
-      title: "Renovation Projects",
-      description: "Expert renovation services for all property types",
-      image: "/placeholder.jpg",
-      contractType: "Renovation",
-    },
-  ],
-};
+import { getPortfolioPageData } from "../../../utils/api";
 
 // Function to fetch data based on service type with server-side pagination and filtering
 async function fetchDataFromAPI(serviceType, filters, page = 1, limit = 6) {
   try {
-    // In a real app, this would fetch from your API
-    // For now, we'll return mock data
+    // Call the API to get data
+    const response = await getPortfolioPageData(
+      serviceType,
+      filters,
+      page,
+      limit
+    );
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Process the response data
+    const items = response.data || [];
 
-    let data = mockServiceData[serviceType] || [];
+    // Format the data to match the expected structure
+    const formattedData = items.map((item) => {
+      // Ensure each item has an id property (use _id from MongoDB)
+      const id = item._id || item.id;
 
-    // Apply filters
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      data = data.filter(
-        (item) =>
-          item.title.toLowerCase().includes(searchLower) ||
-          (item.location && item.location.toLowerCase().includes(searchLower))
-      );
-    }
+      // Get the first image or use placeholder
+      const image =
+        item.images && item.images.length > 0
+          ? item.images[0]
+          : "/placeholder.jpg";
 
-    if (
-      filters.priceRange &&
-      filters.priceRange.length === 2 &&
-      "price" in (data[0] || {})
-    ) {
-      data = data.filter(
-        (item) =>
-          item.price >= filters.priceRange[0] &&
-          item.price <= filters.priceRange[1]
-      );
-    }
-
-    if (filters.size && filters.size !== "any" && "size" in (data[0] || {})) {
-      // This is simplified - in a real app you'd have more sophisticated size filtering
-      data = data.filter((item) => {
-        if (filters.size === "small")
-          return item.size.includes("120") || item.size.includes("250");
-        if (filters.size === "medium")
-          return item.size.includes("300") || item.size.includes("400");
-        if (filters.size === "large")
-          return item.size.includes("500") || item.size.includes("600");
-        if (filters.size === "xlarge")
-          return item.size.includes("800") || parseInt(item.size) > 800;
-        return true;
-      });
-    }
-
-    if (
-      filters.location &&
-      filters.location !== "any" &&
-      "location" in (data[0] || {})
-    ) {
-      data = data.filter((item) => item.location === filters.location);
-    }
-
-    // Apply sorting
-    if (filters.sortBy) {
-      data = [...data].sort((a, b) => {
-        if (filters.sortBy === "newest") return b.id - a.id;
-        if (filters.sortBy === "priceAsc" && "price" in a)
-          return a.price - b.price;
-        if (filters.sortBy === "priceDesc" && "price" in a)
-          return b.price - a.price;
-        if (filters.sortBy === "sizeAsc" && "size" in a) {
-          return parseInt(a.size) - parseInt(b.size);
-        }
-        if (filters.sortBy === "sizeDesc" && "size" in a) {
-          return parseInt(b.size) - parseInt(a.size);
-        }
-        return 0;
-      });
-    }
-
-    // Calculate pagination
-    const total = data.length;
-    const totalPages = Math.ceil(total / limit);
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = data.slice(startIndex, endIndex);
+      // Return formatted item with consistent properties
+      return {
+        ...item,
+        id,
+        image,
+        // Add type property for rendering logic
+        type:
+          serviceType === "lands"
+            ? "land"
+            : serviceType === "houses" || serviceType === "apartments"
+            ? "house"
+            : "service",
+      };
+    });
 
     return {
-      data: paginatedData,
-      pagination: {
-        total,
+      data: formattedData,
+      pagination: response.pagination || {
+        total: items.length,
         page,
         limit,
-        totalPages,
+        totalPages: Math.ceil(items.length / limit),
       },
     };
   } catch (error) {
@@ -479,8 +266,12 @@ export default function Portfolio() {
       );
     }
 
-    // Render properties (lands and houses)
-    if (serviceType === "lands" || serviceType === "houses") {
+    // Render properties (lands, houses, and apartments)
+    if (
+      serviceType === "lands" ||
+      serviceType === "houses" ||
+      serviceType === "apartments"
+    ) {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {data.map((item) => (
@@ -510,15 +301,18 @@ export default function Portfolio() {
                 <div className="mb-4">
                   <p className="text-gray-600">{item.location}</p>
                   <p className="text-gray-600">Size: {item.size}</p>
-                  {serviceType === "houses" && (
+                  {(serviceType === "houses" ||
+                    serviceType === "apartments") && (
                     <>
                       <p className="text-gray-600">Bedrooms: {item.bedrooms}</p>
                       <p className="text-gray-600">
                         Bathrooms: {item.bathrooms}
                       </p>
-                      {item.status === "for-rent" && (
+                      {(item.status === "for-rent" ||
+                        item.status === "For Rent") && (
                         <p className="text-gray-600">
-                          Rent: ${item.price}/{item.rentPeriod}
+                          Rent: ${item.rentPrice || item.price}/
+                          {item.rentPeriod || "month"}
                         </p>
                       )}
                     </>
@@ -526,12 +320,16 @@ export default function Portfolio() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-primary-blue font-bold">
-                    {item.status === "for-rent"
-                      ? `$${item.price || 0}/${item.rentPeriod || "month"}`
+                    {item.status === "for-rent" || item.status === "For Rent"
+                      ? `$${item.rentPrice || item.price || 0}/${
+                          item.rentPeriod || "month"
+                        }`
                       : `$${item.price ? item.price.toLocaleString() : "0"}`}
                   </span>
                   <Link
-                    href={`/${serviceType}/details/${item.id}`}
+                    href={`/${
+                      serviceType === "apartments" ? "houses" : serviceType
+                    }/details/${item.id}`}
                     className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green transition-colors duration-200"
                   >
                     View Details
@@ -707,7 +505,9 @@ export default function Portfolio() {
       </h2>
 
       {/* Search and Filter Component - Only show for properties */}
-      {(serviceType === "lands" || serviceType === "houses") && (
+      {(serviceType === "lands" ||
+        serviceType === "houses" ||
+        serviceType === "apartments") && (
         <SearchFilters
           onFilterChange={handleFilterChange}
           initialFilters={activeFilters}
@@ -723,7 +523,9 @@ export default function Portfolio() {
             {activeFilters.search && ` matching "${activeFilters.search}"`}
           </p>
 
-          {(serviceType === "lands" || serviceType === "houses") && (
+          {(serviceType === "lands" ||
+            serviceType === "houses" ||
+            serviceType === "apartments") && (
             <button
               onClick={() => {
                 const defaultFilters = {

@@ -375,7 +375,7 @@ export const getAdminStats = async () => {
   return response.data;
 };
 
-export const getUserProfile = async (userId) => {
+export const getOtherUserProfile = async (userId) => {
   const response = await api.get(`/users/${userId}`);
   return response.data;
 };
@@ -954,6 +954,110 @@ export const getPortfolioServices = async () => {
 export const getPortfolioStats = async () => {
   const response = await api.get("/portfolio/stats");
   return response.data;
+};
+
+// Portfolio Page API Functions
+export const getPortfolioPageData = async (
+  serviceType,
+  filters,
+  page = 1,
+  limit = 6
+) => {
+  try {
+    let endpoint;
+    let params = new URLSearchParams();
+
+    // Add pagination parameters
+    params.append("page", page);
+    params.append("limit", limit);
+
+    // Add sorting parameters if provided
+    if (filters.sortBy) {
+      let sortBy, sortOrder;
+
+      switch (filters.sortBy) {
+        case "newest":
+          sortBy = "createdAt";
+          sortOrder = "desc";
+          break;
+        case "priceAsc":
+          sortBy = "price";
+          sortOrder = "asc";
+          break;
+        case "priceDesc":
+          sortBy = "price";
+          sortOrder = "desc";
+          break;
+        case "sizeAsc":
+          sortBy = "size";
+          sortOrder = "asc";
+          break;
+        case "sizeDesc":
+          sortBy = "size";
+          sortOrder = "desc";
+          break;
+        default:
+          sortBy = "createdAt";
+          sortOrder = "desc";
+      }
+
+      params.append("sortBy", sortBy);
+      params.append("sortOrder", sortOrder);
+    }
+
+    // Add search parameter if provided
+    if (filters.search) {
+      params.append("query", filters.search);
+    }
+
+    // Add price range parameters if provided
+    if (filters.priceRange && filters.priceRange.length === 2) {
+      if (filters.priceRange[0] > 0) {
+        params.append("minPrice", filters.priceRange[0]);
+      }
+      if (filters.priceRange[1] < 1000000) {
+        params.append("maxPrice", filters.priceRange[1]);
+      }
+    }
+
+    // Add location parameter if provided
+    if (filters.location && filters.location !== "any") {
+      params.append("location", filters.location);
+    }
+
+    // Determine endpoint based on service type
+    switch (serviceType) {
+      case "lands":
+        endpoint = filters.search ? "/lands/search" : "/lands/filter";
+        break;
+      case "houses":
+        endpoint = filters.search ? "/houses/search" : "/houses/filter";
+        break;
+      case "apartments":
+        endpoint = filters.search ? "/apartments/search" : "/apartments/filter";
+        break;
+      case "estateManagement":
+        endpoint = "/services/estate-management";
+        break;
+      case "architecturalDesign":
+        endpoint = "/services/architectural-design";
+        break;
+      case "landSurvey":
+        endpoint = "/services/property-valuation";
+        break;
+      case "generalContracts":
+        endpoint = "/services/legal-consultation";
+        break;
+      default:
+        endpoint = "/lands";
+    }
+
+    const response = await api.get(`${endpoint}?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching ${serviceType} data:`, error);
+    throw error;
+  }
 };
 
 // Favorites API Functions
