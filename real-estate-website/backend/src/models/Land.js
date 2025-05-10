@@ -1,44 +1,95 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
-const landSchema = new mongoose.Schema({
+const landSchema = new mongoose.Schema(
+  {
     title: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     location: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     price: {
-        type: Number,
-        required: true,
+      type: Number,
+      required: true,
     },
-    images: [{
+    size: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["Available", "Sold", "Reserved"],
+      default: "Available",
+    },
+    images: [
+      {
         type: String,
         required: true,
-    }],
+      },
+    ],
     video: {
-        type: String,
-        required: false,
+      type: String,
+      required: false,
+    },
+    brochureUrl: {
+      type: String,
+      required: false,
     },
     purchaseDate: {
-        type: Date,
-        default: Date.now,
+      type: Date,
+      default: null,
     },
-    inspectionDates: [{
+    inspectionDates: [
+      {
         type: Date,
         required: false,
-    }],
+      },
+    ],
     description: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
-    features: [{
+    features: [
+      {
         type: String,
         required: false,
-    }],
-}, { timestamps: true });
+      },
+    ],
+    landmarks: [
+      {
+        name: {
+          type: String,
+          required: true,
+        },
+        distance: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    documents: [
+      {
+        name: {
+          type: String,
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 
-const Land = mongoose.model('Land', landSchema);
+const Land = mongoose.model("Land", landSchema);
 
-export default Land;
+module.exports = Land;

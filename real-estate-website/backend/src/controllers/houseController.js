@@ -1,14 +1,14 @@
-const Land = require("../models/Land");
+const House = require("../models/House");
 const User = require("../models/User");
 const Favorite = require("../models/Favorite");
 const { getOptimizedUrls } = require("../utils/cloudinary");
 
 /**
- * Get all available lands with pagination and sorting
- * @route GET /api/lands
+ * Get all available houses with pagination and sorting
+ * @route GET /api/houses
  * @access Public
  */
-const getAvailableLands = async (req, res) => {
+const getAvailableHouses = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -16,19 +16,19 @@ const getAvailableLands = async (req, res) => {
     const sortBy = req.query.sortBy || "createdAt";
     const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
 
-    // Only get lands with status "Available"
-    const filter = { status: "Available" };
+    // Only get houses with status "Available" or "For Rent"
+    const filter = { status: { $in: ["Available", "For Rent"] } };
 
-    const lands = await Land.find(filter)
+    const houses = await House.find(filter)
       .sort({ [sortBy]: sortOrder })
       .skip(skip)
       .limit(limit);
 
-    const total = await Land.countDocuments(filter);
+    const total = await House.countDocuments(filter);
 
     res.status(200).json({
       success: true,
-      data: lands,
+      data: houses,
       pagination: {
         total,
         page,
@@ -37,60 +37,71 @@ const getAvailableLands = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching lands:", error);
+    console.error("Error fetching houses:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching lands",
+      message: "Error fetching houses",
       error: error.message,
     });
   }
 };
 
 /**
- * Get land details by ID
- * @route GET /api/lands/:id
+ * Get house details by ID
+ * @route GET /api/houses/:id
  * @access Public
  */
-const getLandDetails = async (req, res) => {
+const getHouseDetails = async (req, res) => {
   const { id } = req.params;
   try {
-    const land = await Land.findById(id);
-    if (!land) {
+    const house = await House.findById(id);
+    if (!house) {
       return res.status(404).json({
         success: false,
-        message: "Land not found",
+        message: "House not found",
       });
     }
     res.status(200).json({
       success: true,
-      data: land,
+      data: house,
     });
   } catch (error) {
-    console.error("Error fetching land details:", error);
+    console.error("Error fetching house details:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching land details",
+      message: "Error fetching house details",
       error: error.message,
     });
   }
 };
 
 /**
- * Add a new land
- * @route POST /api/lands
+ * Add a new house
+ * @route POST /api/houses
  * @access Private/Admin
  */
-const addLand = async (req, res) => {
+const addHouse = async (req, res) => {
   try {
     const {
       title,
       location,
       price,
       size,
+      status,
+      propertyType,
+      bedrooms,
+      bathrooms,
       description,
       features,
       landmarks,
       documents,
+      yearBuilt,
+      garage,
+      garageCapacity,
+      hasGarden,
+      hasPool,
+      rentPrice,
+      rentPeriod,
     } = req.body;
 
     // Process uploaded media files
@@ -127,12 +138,16 @@ const addLand = async (req, res) => {
       }
     }
 
-    // Create new land
-    const newLand = new Land({
+    // Create new house
+    const newHouse = new House({
       title,
       location,
       price,
       size,
+      status,
+      propertyType,
+      bedrooms,
+      bathrooms,
       images,
       video,
       brochureUrl,
@@ -140,39 +155,46 @@ const addLand = async (req, res) => {
       features: features ? JSON.parse(features) : [],
       landmarks: landmarks ? JSON.parse(landmarks) : [],
       documents: documents ? JSON.parse(documents) : [],
+      yearBuilt,
+      garage: garage === "true",
+      garageCapacity,
+      hasGarden: hasGarden === "true",
+      hasPool: hasPool === "true",
+      rentPrice,
+      rentPeriod,
     });
 
-    await newLand.save();
+    await newHouse.save();
 
     res.status(201).json({
       success: true,
-      data: newLand,
-      message: "Land added successfully",
+      data: newHouse,
+      message: "House added successfully",
     });
   } catch (error) {
-    console.error("Error adding land:", error);
+    console.error("Error adding house:", error);
     res.status(500).json({
       success: false,
-      message: "Error adding land",
+      message: "Error adding house",
       error: error.message,
     });
   }
 };
 
 /**
- * Edit an existing land
- * @route PUT /api/lands/:id
+ * Edit an existing house
+ * @route PUT /api/houses/:id
  * @access Private/Admin
  */
-const editLand = async (req, res) => {
+const editHouse = async (req, res) => {
   const { id } = req.params;
   try {
-    // Find land to update
-    const land = await Land.findById(id);
-    if (!land) {
+    // Find house to update
+    const house = await House.findById(id);
+    if (!house) {
       return res.status(404).json({
         success: false,
-        message: "Land not found",
+        message: "House not found",
       });
     }
 
@@ -192,7 +214,7 @@ const editLand = async (req, res) => {
 
       if (newImages.length > 0) {
         // Append new images to existing ones
-        req.body.images = [...land.images, ...newImages];
+        req.body.images = [...house.images, ...newImages];
       }
 
       const videos = mediaUrls.filter(
@@ -224,131 +246,144 @@ const editLand = async (req, res) => {
       req.body.documents = JSON.parse(req.body.documents);
     }
 
-    // Update land
-    const updatedLand = await Land.findByIdAndUpdate(id, req.body, {
+    // Convert boolean strings to actual booleans
+    if (req.body.garage) {
+      req.body.garage = req.body.garage === "true";
+    }
+
+    if (req.body.hasGarden) {
+      req.body.hasGarden = req.body.hasGarden === "true";
+    }
+
+    if (req.body.hasPool) {
+      req.body.hasPool = req.body.hasPool === "true";
+    }
+
+    // Update house
+    const updatedHouse = await House.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });
 
     res.status(200).json({
       success: true,
-      data: updatedLand,
-      message: "Land updated successfully",
+      data: updatedHouse,
+      message: "House updated successfully",
     });
   } catch (error) {
-    console.error("Error updating land:", error);
+    console.error("Error updating house:", error);
     res.status(500).json({
       success: false,
-      message: "Error updating land",
+      message: "Error updating house",
       error: error.message,
     });
   }
 };
 
 /**
- * Delete a land
- * @route DELETE /api/lands/:id
+ * Delete a house
+ * @route DELETE /api/houses/:id
  * @access Private/Admin
  */
-const deleteLand = async (req, res) => {
+const deleteHouse = async (req, res) => {
   const { id } = req.params;
   try {
-    const deletedLand = await Land.findByIdAndDelete(id);
-    if (!deletedLand) {
+    const deletedHouse = await House.findByIdAndDelete(id);
+    if (!deletedHouse) {
       return res.status(404).json({
         success: false,
-        message: "Land not found",
+        message: "House not found",
       });
     }
 
-    // Remove land from user favorites
-    await Favorite.deleteMany({ propertyType: "Land", propertyId: id });
+    // Remove house from user favorites
+    await Favorite.deleteMany({ propertyType: "House", propertyId: id });
 
-    // Remove land from user purchased lands
+    // Remove house from user purchased houses
     await User.updateMany(
-      { purchasedLands: id },
-      { $pull: { purchasedLands: id } }
+      { purchasedHouses: id },
+      { $pull: { purchasedHouses: id } }
     );
 
     res.status(200).json({
       success: true,
-      message: "Land deleted successfully",
+      message: "House deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting land:", error);
+    console.error("Error deleting house:", error);
     res.status(500).json({
       success: false,
-      message: "Error deleting land",
+      message: "Error deleting house",
       error: error.message,
     });
   }
 };
 
 /**
- * Add land to user favorites
- * @route POST /api/lands/favorites/:id
+ * Add house to user favorites
+ * @route POST /api/houses/favorites/:id
  * @access Private
  */
-const addLandToFavorites = async (req, res) => {
+const addHouseToFavorites = async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
 
   try {
-    // Check if land exists
-    const land = await Land.findById(id);
-    if (!land) {
+    // Check if house exists
+    const house = await House.findById(id);
+    if (!house) {
       return res.status(404).json({
         success: false,
-        message: "Land not found",
+        message: "House not found",
       });
     }
 
     // Check if already in favorites
     const existingFavorite = await Favorite.findOne({
       userId,
-      propertyType: "Land",
+      propertyType: "House",
       propertyId: id,
     });
 
     if (existingFavorite) {
       return res.status(400).json({
         success: false,
-        message: "Land already in favorites",
+        message: "House already in favorites",
       });
     }
 
     // Add to favorites
     const favorite = new Favorite({
       userId,
-      propertyType: "Land",
+      propertyType: "House",
       propertyId: id,
     });
 
     await favorite.save();
 
-    // Also add to user's favoriteLands array
-    await User.findByIdAndUpdate(userId, { $addToSet: { favoriteLands: id } });
+    // Also add to user's favoriteHouses array
+    await User.findByIdAndUpdate(userId, { $addToSet: { favoriteHouses: id } });
 
     res.status(200).json({
       success: true,
-      message: "Land added to favorites successfully",
+      message: "House added to favorites successfully",
     });
   } catch (error) {
-    console.error("Error adding land to favorites:", error);
+    console.error("Error adding house to favorites:", error);
     res.status(500).json({
       success: false,
-      message: "Error adding land to favorites",
+      message: "Error adding house to favorites",
       error: error.message,
     });
   }
 };
 
 /**
- * Remove land from user favorites
- * @route DELETE /api/lands/favorites/:id
+ * Remove house from user favorites
+ * @route DELETE /api/houses/favorites/:id
  * @access Private
  */
-const removeLandFromFavorites = async (req, res) => {
+const removeHouseFromFavorites = async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
 
@@ -356,101 +391,101 @@ const removeLandFromFavorites = async (req, res) => {
     // Remove from favorites collection
     const result = await Favorite.findOneAndDelete({
       userId,
-      propertyType: "Land",
+      propertyType: "House",
       propertyId: id,
     });
 
     if (!result) {
       return res.status(404).json({
         success: false,
-        message: "Land not found in favorites",
+        message: "House not found in favorites",
       });
     }
 
-    // Also remove from user's favoriteLands array
-    await User.findByIdAndUpdate(userId, { $pull: { favoriteLands: id } });
+    // Also remove from user's favoriteHouses array
+    await User.findByIdAndUpdate(userId, { $pull: { favoriteHouses: id } });
 
     res.status(200).json({
       success: true,
-      message: "Land removed from favorites successfully",
+      message: "House removed from favorites successfully",
     });
   } catch (error) {
-    console.error("Error removing land from favorites:", error);
+    console.error("Error removing house from favorites:", error);
     res.status(500).json({
       success: false,
-      message: "Error removing land from favorites",
+      message: "Error removing house from favorites",
       error: error.message,
     });
   }
 };
 
 /**
- * Get user's favorite lands
- * @route GET /api/lands/favorites
+ * Get user's favorite houses
+ * @route GET /api/houses/favorites
  * @access Private
  */
-const getUserFavoriteLands = async (req, res) => {
+const getUserFavoriteHouses = async (req, res) => {
   const userId = req.user._id;
 
   try {
     // Get favorites from Favorite collection
     const favorites = await Favorite.find({
       userId,
-      propertyType: "Land",
+      propertyType: "House",
     });
 
-    // Extract land IDs
-    const landIds = favorites.map((fav) => fav.propertyId);
+    // Extract house IDs
+    const houseIds = favorites.map((fav) => fav.propertyId);
 
-    // Get land details
-    const lands = await Land.find({ _id: { $in: landIds } });
+    // Get house details
+    const houses = await House.find({ _id: { $in: houseIds } });
 
     res.status(200).json({
       success: true,
-      data: lands,
+      data: houses,
     });
   } catch (error) {
-    console.error("Error fetching favorite lands:", error);
+    console.error("Error fetching favorite houses:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching favorite lands",
+      message: "Error fetching favorite houses",
       error: error.message,
     });
   }
 };
 
 /**
- * Get user's purchased lands
- * @route GET /api/lands/my-lands
+ * Get user's purchased houses
+ * @route GET /api/houses/my-houses
  * @access Private
  */
-const getUserPurchasedLands = async (req, res) => {
+const getUserPurchasedHouses = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    // Get user with populated purchasedLands
-    const user = await User.findById(userId).populate("purchasedLands");
+    // Get user with populated purchasedHouses
+    const user = await User.findById(userId).populate("purchasedHouses");
 
     res.status(200).json({
       success: true,
-      data: user.purchasedLands,
+      data: user.purchasedHouses,
     });
   } catch (error) {
-    console.error("Error fetching purchased lands:", error);
+    console.error("Error fetching purchased houses:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching purchased lands",
+      message: "Error fetching purchased houses",
       error: error.message,
     });
   }
 };
 
 /**
- * Search lands by title or location
- * @route GET /api/lands/search
+ * Search houses by title, location, or description
+ * @route GET /api/houses/search
  * @access Public
  */
-const searchLands = async (req, res) => {
+const searchHouses = async (req, res) => {
   try {
     const { query } = req.query;
     const page = parseInt(req.query.page) || 1;
@@ -471,17 +506,17 @@ const searchLands = async (req, res) => {
         { location: { $regex: query, $options: "i" } },
         { description: { $regex: query, $options: "i" } },
       ],
-      status: "Available",
+      status: { $in: ["Available", "For Rent"] },
     };
 
     // Execute search
-    const lands = await Land.find(filter).skip(skip).limit(limit);
+    const houses = await House.find(filter).skip(skip).limit(limit);
 
-    const total = await Land.countDocuments(filter);
+    const total = await House.countDocuments(filter);
 
     res.status(200).json({
       success: true,
-      data: lands,
+      data: houses,
       pagination: {
         total,
         page,
@@ -490,30 +525,41 @@ const searchLands = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error searching lands:", error);
+    console.error("Error searching houses:", error);
     res.status(500).json({
       success: false,
-      message: "Error searching lands",
+      message: "Error searching houses",
       error: error.message,
     });
   }
 };
 
 /**
- * Filter lands by various criteria
- * @route GET /api/lands/filter
+ * Filter houses by various criteria
+ * @route GET /api/houses/filter
  * @access Public
  */
-const filterLands = async (req, res) => {
+const filterHouses = async (req, res) => {
   try {
-    const { minPrice, maxPrice, location, size, sortBy, sortOrder } = req.query;
+    const {
+      minPrice,
+      maxPrice,
+      location,
+      size,
+      bedrooms,
+      bathrooms,
+      propertyType,
+      status,
+      sortBy,
+      sortOrder,
+    } = req.query;
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     // Build filter object
-    const filter = { status: "Available" };
+    const filter = { status: { $in: ["Available", "For Rent"] } };
 
     if (minPrice && maxPrice) {
       filter.price = { $gte: minPrice, $lte: maxPrice };
@@ -531,6 +577,22 @@ const filterLands = async (req, res) => {
       filter.size = { $regex: size, $options: "i" };
     }
 
+    if (bedrooms) {
+      filter.bedrooms = bedrooms;
+    }
+
+    if (bathrooms) {
+      filter.bathrooms = bathrooms;
+    }
+
+    if (propertyType) {
+      filter.propertyType = propertyType;
+    }
+
+    if (status && (status === "Available" || status === "For Rent")) {
+      filter.status = status;
+    }
+
     // Build sort object
     const sort = {};
     if (sortBy) {
@@ -540,13 +602,13 @@ const filterLands = async (req, res) => {
     }
 
     // Execute query
-    const lands = await Land.find(filter).sort(sort).skip(skip).limit(limit);
+    const houses = await House.find(filter).sort(sort).skip(skip).limit(limit);
 
-    const total = await Land.countDocuments(filter);
+    const total = await House.countDocuments(filter);
 
     res.status(200).json({
       success: true,
-      data: lands,
+      data: houses,
       pagination: {
         total,
         page,
@@ -555,25 +617,25 @@ const filterLands = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error filtering lands:", error);
+    console.error("Error filtering houses:", error);
     res.status(500).json({
       success: false,
-      message: "Error filtering lands",
+      message: "Error filtering houses",
       error: error.message,
     });
   }
 };
 
 module.exports = {
-  getAvailableLands,
-  getLandDetails,
-  addLand,
-  editLand,
-  deleteLand,
-  addLandToFavorites,
-  removeLandFromFavorites,
-  getUserFavoriteLands,
-  getUserPurchasedLands,
-  searchLands,
-  filterLands,
+  getAvailableHouses,
+  getHouseDetails,
+  addHouse,
+  editHouse,
+  deleteHouse,
+  addHouseToFavorites,
+  removeHouseFromFavorites,
+  getUserFavoriteHouses,
+  getUserPurchasedHouses,
+  searchHouses,
+  filterHouses,
 };

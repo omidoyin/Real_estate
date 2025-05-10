@@ -1,29 +1,75 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     email: {
-        type: String,
-        required: true,
-        unique: true,
+      type: String,
+      required: true,
+      unique: true,
     },
     phone: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     password: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
-    purchasedLands: [{
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    purchasedLands: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Land',
-    }],
-}, { timestamps: true });
+        ref: "Land",
+      },
+    ],
+    purchasedHouses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "House",
+      },
+    ],
+    purchasedApartments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Apartment",
+      },
+    ],
+    favoriteLands: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Land",
+      },
+    ],
+    favoriteHouses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "House",
+      },
+    ],
+    favoriteApartments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Apartment",
+      },
+    ],
+    subscribedServices: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Service",
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
-export default User;
+module.exports = User;
