@@ -1,5 +1,67 @@
 import axios from "axios";
 import { getCachedOrFetch } from "./cache";
+import { setAdminToken, removeAdminToken } from "./auth";
+
+// Utility function to check if we're in an admin page
+const isAdminPage = () => {
+  if (typeof window !== "undefined") {
+    return window.location.pathname.startsWith("/admin");
+  }
+  return false;
+};
+
+// Wrapper function for admin API calls to handle token-related issues
+const adminApiCall = async (apiFunction) => {
+  try {
+    return await apiFunction();
+  } catch (error) {
+    // CRITICAL FIX: Direct check for "Access denied. No token provided." message
+    if (
+      error.response &&
+      error.response.data &&
+      error.response.data.message === "Access denied. No token provided."
+    ) {
+      console.log(
+        "ACCESS DENIED ERROR DETECTED IN ADMIN API CALL:",
+        error.response.data
+      );
+
+      if (typeof window !== "undefined") {
+        console.log("Removing admin token and redirecting to admin login");
+        localStorage.removeItem("adminToken");
+
+        // Use setTimeout to ensure this happens after current execution
+        setTimeout(() => {
+          console.log("Executing redirect to /admin/login from adminApiCall");
+          window.location.href = "/admin/login";
+        }, 0);
+      }
+    }
+    // General admin auth error handling
+    else if (isAdminPage() && typeof window !== "undefined" && error.response) {
+      console.log("Admin API call error:", error.response);
+
+      const { status, data } = error.response;
+
+      // Check for any of these conditions:
+      // 1. Status is 401
+      // 2. Success is false
+      if (status === 401 || (data && data.success === false)) {
+        console.log(
+          "Redirecting to admin login due to auth error in adminApiCall"
+        );
+        localStorage.removeItem("adminToken");
+
+        // Use setTimeout to ensure this happens after current execution
+        setTimeout(() => {
+          console.log("Executing redirect to /admin/login from adminApiCall");
+          window.location.href = "/admin/login";
+        }, 0);
+      }
+    }
+    throw error;
+  }
+};
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -26,13 +88,72 @@ api.interceptors.response.use(
     // Handle API errors
     const { status, data } = error.response;
 
+    // CRITICAL FIX: Direct check for "Access denied. No token provided." message
+    if (data && data.message === "Access denied. No token provided.") {
+      console.log("ACCESS DENIED ERROR DETECTED:", data);
+
+      // Force redirect to admin login page if we're on an admin page
+      if (isAdminPage() && typeof window !== "undefined") {
+        console.log("We are on admin page, redirecting to admin login");
+        localStorage.removeItem("adminToken");
+
+        // Use setTimeout to ensure this happens after current execution
+        setTimeout(() => {
+          console.log("Executing redirect to /admin/login");
+          window.location.href = "/admin/login";
+        }, 0);
+
+        return Promise.reject(
+          new Error("Your session has expired. Please log in again.")
+        );
+      }
+    }
+
+    // General admin auth error handling
+    if (isAdminPage() && typeof window !== "undefined") {
+      console.log("Admin page error:", error.response);
+
+      // Check for any of these conditions:
+      // 1. Status is 401
+      // 2. Success is false
+      if (status === 401 || (data && data.success === false)) {
+        console.log("Redirecting to admin login due to auth error");
+        localStorage.removeItem("adminToken");
+
+        // Use setTimeout to ensure this happens after current execution
+        setTimeout(() => {
+          console.log("Executing redirect to /admin/login");
+          window.location.href = "/admin/login";
+        }, 0);
+
+        return Promise.reject(
+          new Error("Your session has expired. Please log in again.")
+        );
+      }
+    }
+
     switch (status) {
       case 401:
-        // Unauthorized - clear auth tokens and redirect to login
+        // Unauthorized - clear auth tokens
         if (typeof window !== "undefined") {
-          localStorage.removeItem("token");
-          localStorage.removeItem("adminToken");
-          window.location.href = "/auth/login";
+          if (isAdminPage()) {
+            console.log(
+              "401 Unauthorized in admin page, redirecting to admin login"
+            );
+            localStorage.removeItem("adminToken");
+
+            // Use setTimeout to ensure this happens after current execution
+            setTimeout(() => {
+              console.log(
+                "Executing redirect to /admin/login from 401 handler"
+              );
+              window.location.href = "/admin/login";
+            }, 0);
+          } else {
+            localStorage.removeItem("token");
+            // Redirect to user login page
+            window.location.href = "/auth/login";
+          }
         }
         return Promise.reject(
           new Error("Your session has expired. Please log in again.")
@@ -69,9 +190,17 @@ api.interceptors.response.use(
 if (typeof window !== "undefined") {
   api.interceptors.request.use(
     (config) => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Check if we're in an admin page
+      if (isAdminPage()) {
+        const adminToken = localStorage.getItem("adminToken");
+        if (adminToken) {
+          config.headers.Authorization = `Bearer ${adminToken}`;
+        }
+      } else {
+        const token = localStorage.getItem("token");
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
       return config;
     },
@@ -141,10 +270,7 @@ export const logout = async () => {
     console.error("Error during logout:", error);
   } finally {
     setAuthToken(null);
-    // For Next.js client components
-    if (typeof window !== "undefined") {
-      window.location.href = "/auth/login";
-    }
+    // Navigation should be handled by the component using this function
   }
 };
 
@@ -1083,156 +1209,358 @@ export const removeFromFavorites = async (favoriteId) => {
 
 // Admin API functions
 export const adminLogin = async (credentials) => {
-  const response = await api.post("/admin/login", credentials);
-  if (response.data.token) {
-    localStorage.setItem("adminToken", response.data.token);
+  try {
+    const response = await api.post("/admin/login", credentials);
+    if (response.data.token) {
+      // Use the auth utility function
+      setAdminToken(response.data.token);
+    }
+    return response.data;
+  } catch (error) {
+    // If there's an error, make sure we handle it properly
+    console.error("Admin login error:", error);
+
+    // Check for "Access denied. No token provided." error
+    if (
+      error.response &&
+      error.response.data &&
+      error.response.data.message === "Access denied. No token provided." &&
+      typeof window !== "undefined"
+    ) {
+      console.log(
+        "Access denied error in adminLogin, redirecting to login page"
+      );
+      localStorage.removeItem("adminToken");
+
+      // Use setTimeout to ensure this happens after current execution
+      setTimeout(() => {
+        console.log("Executing redirect to /admin/login from adminLogin");
+        window.location.href = "/admin/login";
+      }, 0);
+    }
+
+    throw error;
   }
-  return response.data;
 };
 
 export const getAdminDashboardData = async () => {
-  const response = await api.get("/admin/dashboard");
-  return response.data;
+  try {
+    const response = await api.get("/admin/dashboard");
+    return response.data;
+  } catch (error) {
+    console.error("Admin dashboard error:", error);
+
+    // CRITICAL FIX: Direct check for "Access denied. No token provided." message
+    if (
+      error.response &&
+      error.response.data &&
+      error.response.data.message === "Access denied. No token provided."
+    ) {
+      console.log(
+        "ACCESS DENIED ERROR DETECTED IN getAdminDashboardData:",
+        error.response.data
+      );
+
+      if (typeof window !== "undefined") {
+        console.log("Removing admin token and redirecting to admin login");
+        localStorage.removeItem("adminToken");
+
+        // Use setTimeout to ensure this happens after current execution
+        setTimeout(() => {
+          console.log(
+            "Executing redirect to /admin/login from getAdminDashboardData"
+          );
+          window.location.href = "/admin/login";
+        }, 0);
+      }
+
+      throw error;
+    }
+
+    // Direct check for other auth errors
+    if (error.response) {
+      const { status, data } = error.response;
+
+      if (status === 401 || (data && data.success === false)) {
+        console.log(
+          "Auth error in getAdminDashboardData, redirecting to login page"
+        );
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("adminToken");
+
+          // Use setTimeout to ensure this happens after current execution
+          setTimeout(() => {
+            console.log(
+              "Executing redirect to /admin/login from getAdminDashboardData"
+            );
+            window.location.href = "/admin/login";
+          }, 0);
+        }
+      }
+    }
+
+    throw error;
+  }
+};
+
+// Admin Announcements
+export const getAnnouncements = async () => {
+  try {
+    const response = await api.get("/admin/announcements");
+    return response.data;
+  } catch (error) {
+    console.error("Admin announcements error:", error);
+
+    // Direct check for auth errors
+    if (error.response) {
+      const { status, data } = error.response;
+
+      if (
+        status === 401 ||
+        (data && data.message === "Access denied. No token provided.") ||
+        (data && data.success === false)
+      ) {
+        console.log(
+          "Auth error in getAnnouncements, redirecting to login page"
+        );
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("adminToken");
+          window.location.replace("/admin/login");
+        }
+      }
+    }
+
+    throw error;
+  }
+};
+
+export const addAnnouncement = async (announcementData) => {
+  return adminApiCall(async () => {
+    const response = await api.post("/admin/announcements", announcementData);
+    return response.data;
+  });
+};
+
+export const updateAnnouncement = async (id, announcementData) => {
+  return adminApiCall(async () => {
+    const response = await api.put(
+      `/admin/announcements/${id}`,
+      announcementData
+    );
+    return response.data;
+  });
+};
+
+export const deleteAnnouncement = async (id) => {
+  return adminApiCall(async () => {
+    const response = await api.delete(`/admin/announcements/${id}`);
+    return response.data;
+  });
+};
+
+// Admin Teams
+export const getTeams = async () => {
+  try {
+    const response = await api.get("/admin/teams");
+    return response.data;
+  } catch (error) {
+    console.error("Admin teams error:", error);
+
+    // Direct check for auth errors
+    if (error.response) {
+      const { status, data } = error.response;
+
+      if (
+        status === 401 ||
+        (data && data.message === "Access denied. No token provided.") ||
+        (data && data.success === false)
+      ) {
+        console.log("Auth error in getTeams, redirecting to login page");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("adminToken");
+          window.location.replace("/admin/login");
+        }
+      }
+    }
+
+    throw error;
+  }
+};
+
+export const addTeamMember = async (teamData) => {
+  return adminApiCall(async () => {
+    // Create FormData for file uploads
+    const formData = new FormData();
+
+    // Add text fields
+    Object.keys(teamData).forEach((key) => {
+      if (key !== "photo") {
+        if (typeof teamData[key] === "object") {
+          formData.append(key, JSON.stringify(teamData[key]));
+        } else {
+          formData.append(key, teamData[key]);
+        }
+      }
+    });
+
+    // Add photo
+    if (teamData.photo) {
+      formData.append("media", teamData.photo);
+    }
+
+    const response = await api.post("/admin/teams", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  });
+};
+
+export const updateTeamMember = async (id, teamData) => {
+  return adminApiCall(async () => {
+    // Create FormData for file uploads
+    const formData = new FormData();
+
+    // Add text fields
+    Object.keys(teamData).forEach((key) => {
+      if (key !== "photo") {
+        if (typeof teamData[key] === "object") {
+          formData.append(key, JSON.stringify(teamData[key]));
+        } else {
+          formData.append(key, teamData[key]);
+        }
+      }
+    });
+
+    // Add photo
+    if (teamData.photo && teamData.photo instanceof File) {
+      formData.append("media", teamData.photo);
+    }
+
+    const response = await api.put(`/admin/teams/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  });
+};
+
+export const deleteTeamMember = async (id) => {
+  return adminApiCall(async () => {
+    const response = await api.delete(`/admin/teams/${id}`);
+    return response.data;
+  });
+};
+
+// Admin Inspections
+export const getInspections = async () => {
+  try {
+    const response = await api.get("/admin/inspections");
+    return response.data;
+  } catch (error) {
+    console.error("Admin inspections error:", error);
+
+    // Direct check for auth errors
+    if (error.response) {
+      const { status, data } = error.response;
+
+      if (
+        status === 401 ||
+        (data && data.message === "Access denied. No token provided.") ||
+        (data && data.success === false)
+      ) {
+        console.log("Auth error in getInspections, redirecting to login page");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("adminToken");
+          window.location.replace("/admin/login");
+        }
+      }
+    }
+
+    throw error;
+  }
+};
+
+export const addInspection = async (inspectionData) => {
+  return adminApiCall(async () => {
+    const response = await api.post("/admin/inspections", inspectionData);
+    return response.data;
+  });
+};
+
+export const updateInspection = async (id, inspectionData) => {
+  return adminApiCall(async () => {
+    const response = await api.put(`/admin/inspections/${id}`, inspectionData);
+    return response.data;
+  });
+};
+
+export const deleteInspection = async (id) => {
+  return adminApiCall(async () => {
+    const response = await api.delete(`/admin/inspections/${id}`);
+    return response.data;
+  });
 };
 
 // Admin User Management
 export const getUsers = async (page = 1, limit = 10) => {
-  const response = await api.get(`/admin/users?page=${page}&limit=${limit}`);
-  return response.data;
+  try {
+    const response = await api.get(`/admin/users?page=${page}&limit=${limit}`);
+    return response.data;
+  } catch (error) {
+    console.error("Admin users error:", error);
+
+    // Direct check for auth errors
+    if (error.response) {
+      const { status, data } = error.response;
+
+      if (
+        status === 401 ||
+        (data && data.message === "Access denied. No token provided.") ||
+        (data && data.success === false)
+      ) {
+        console.log("Auth error in getUsers, redirecting to login page");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("adminToken");
+          window.location.replace("/admin/login");
+        }
+      }
+    }
+
+    throw error;
+  }
 };
 
 export const getUserDetails = async (userId) => {
-  const response = await api.get(`/admin/users/${userId}`);
-  return response.data;
+  return adminApiCall(async () => {
+    const response = await api.get(`/admin/users/${userId}`);
+    return response.data;
+  });
 };
 
 export const updateUserRole = async (userId, role) => {
-  const response = await api.put(`/admin/users/${userId}/role`, { role });
-  return response.data;
+  return adminApiCall(async () => {
+    const response = await api.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  });
 };
 
 export const deleteUser = async (userId) => {
-  const response = await api.delete(`/admin/users/${userId}`);
-  return response.data;
-};
-
-// Admin Announcement Management
-export const getAnnouncements = async () => {
-  const response = await api.get("/admin/announcements");
-  return response.data;
-};
-
-export const addAnnouncement = async (announcementData) => {
-  const response = await api.post("/admin/announcements", announcementData);
-  return response.data;
-};
-
-export const updateAnnouncement = async (id, announcementData) => {
-  const response = await api.put(
-    `/admin/announcements/${id}`,
-    announcementData
-  );
-  return response.data;
-};
-
-export const deleteAnnouncement = async (id) => {
-  const response = await api.delete(`/admin/announcements/${id}`);
-  return response.data;
-};
-
-// Admin Team Management
-export const getTeams = async () => {
-  const response = await api.get("/admin/teams");
-  return response.data;
-};
-
-export const addTeamMember = async (teamData) => {
-  // Create FormData for file uploads
-  const formData = new FormData();
-
-  // Add text fields
-  Object.keys(teamData).forEach((key) => {
-    if (key !== "photo") {
-      if (typeof teamData[key] === "object") {
-        formData.append(key, JSON.stringify(teamData[key]));
-      } else {
-        formData.append(key, teamData[key]);
-      }
-    }
+  return adminApiCall(async () => {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
   });
-
-  // Add photo
-  if (teamData.photo) {
-    formData.append("media", teamData.photo);
-  }
-
-  const response = await api.post("/admin/teams", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return response.data;
-};
-
-export const updateTeamMember = async (id, teamData) => {
-  // Create FormData for file uploads
-  const formData = new FormData();
-
-  // Add text fields
-  Object.keys(teamData).forEach((key) => {
-    if (key !== "photo") {
-      if (typeof teamData[key] === "object") {
-        formData.append(key, JSON.stringify(teamData[key]));
-      } else {
-        formData.append(key, teamData[key]);
-      }
-    }
-  });
-
-  // Add photo
-  if (teamData.photo && teamData.photo instanceof File) {
-    formData.append("media", teamData.photo);
-  }
-
-  const response = await api.put(`/admin/teams/${id}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return response.data;
-};
-
-export const deleteTeamMember = async (id) => {
-  const response = await api.delete(`/admin/teams/${id}`);
-  return response.data;
-};
-
-// Admin Inspection Management
-export const getInspections = async () => {
-  const response = await api.get("/admin/inspections");
-  return response.data;
-};
-
-export const addInspection = async (inspectionData) => {
-  const response = await api.post("/admin/inspections", inspectionData);
-  return response.data;
-};
-
-export const updateInspection = async (id, inspectionData) => {
-  const response = await api.put(`/admin/inspections/${id}`, inspectionData);
-  return response.data;
-};
-
-export const deleteInspection = async (id) => {
-  const response = await api.delete(`/admin/inspections/${id}`);
-  return response.data;
 };
 
 export const adminLogout = () => {
-  localStorage.removeItem("adminToken");
-  // For Next.js client components
+  // Use the auth utility function
+  removeAdminToken();
+
+  // Directly redirect to admin login page
   if (typeof window !== "undefined") {
-    window.location.href = "/admin/login";
+    window.location.replace("/admin/login");
   }
 };
 

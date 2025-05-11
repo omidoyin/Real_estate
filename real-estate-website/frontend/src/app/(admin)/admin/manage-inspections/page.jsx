@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getInspections,
+  addInspection,
+  updateInspection,
+  deleteInspection,
+} from "../../../../utils/api";
 
 export default function ManageInspections() {
   const [inspections, setInspections] = useState([]);
@@ -20,9 +26,55 @@ export default function ManageInspections() {
     agent: "",
     contact: "",
     notes: "",
+    // Additional fields for API integration
+    clientId: "",
+    propertyId: "",
+    propertyType: "Land",
+    agentId: "",
   });
   const [formErrors, setFormErrors] = useState({});
   const router = useRouter();
+
+  // Helper function to format inspection data
+  const formatInspectionData = (data) => {
+    return data.map((inspection) => {
+      // Extract client name and contact from client object
+      const clientName = inspection.client
+        ? inspection.client.name
+        : "Unknown Client";
+      const clientContact = inspection.client
+        ? inspection.client.email
+        : "No contact";
+
+      // Extract property name
+      const propertyName = inspection.property
+        ? inspection.property.title
+        : "Unknown Property";
+
+      // Extract agent name
+      const agentName = inspection.agent
+        ? inspection.agent.name
+        : "Unknown Agent";
+
+      return {
+        id: inspection._id,
+        client: clientName,
+        property: propertyName,
+        date: inspection.date,
+        status: inspection.status,
+        agent: agentName,
+        contact: clientContact,
+        notes: inspection.notes || "",
+        feedback: inspection.feedback || "",
+        followUpDate: inspection.followUpDate,
+        // Store original references for API calls
+        clientId: inspection.client ? inspection.client._id : null,
+        propertyId: inspection.property ? inspection.property._id : null,
+        propertyType: inspection.propertyType,
+        agentId: inspection.agent ? inspection.agent._id : null,
+      };
+    });
+  };
 
   // Format date for input field
   const formatDateForInput = (dateString) => {
@@ -127,6 +179,11 @@ export default function ManageInspections() {
       agent: inspection.agent,
       contact: inspection.contact,
       notes: inspection.notes || "",
+      // Additional fields for API integration
+      clientId: inspection.clientId || "",
+      propertyId: inspection.propertyId || "",
+      propertyType: inspection.propertyType || "Land",
+      agentId: inspection.agentId || "",
     });
     setFormErrors({});
     setIsEditModalOpen(true);
@@ -146,107 +203,149 @@ export default function ManageInspections() {
   };
 
   // Handle add inspection
-  const handleAddInspection = (e) => {
+  const handleAddInspection = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newInspection = {
-      id: inspections.length + 1,
-      client: formData.client,
-      property: formData.property,
-      date: combineDateAndTime(formData.date, formData.time),
-      status: formData.status,
-      agent: formData.agent,
-      contact: formData.contact,
-      notes: formData.notes,
-    };
+    try {
+      // Prepare data for API
+      const inspectionData = {
+        client: formData.clientId, // This would need to be selected from a dropdown
+        property: formData.propertyId, // This would need to be selected from a dropdown
+        propertyType: formData.propertyType || "Land", // Default to Land if not specified
+        date: combineDateAndTime(formData.date, formData.time),
+        status: formData.status,
+        agent: formData.agentId, // This would need to be selected from a dropdown
+        notes: formData.notes,
+      };
 
-    setInspections([...inspections, newInspection]);
-    closeModals();
+      const response = await addInspection(inspectionData);
 
-    // Show success message (in a real app)
-    alert("Inspection scheduled successfully!");
+      if (!response.success) {
+        throw new Error(response.message || "Failed to add inspection");
+      }
+
+      // Refresh the inspections list
+      const response2 = await getInspections();
+
+      if (response2.success) {
+        const formattedInspections = formatInspectionData(response2.data);
+
+        setInspections(formattedInspections);
+      }
+
+      closeModals();
+      alert("Inspection scheduled successfully!");
+    } catch (error) {
+      console.error("Error adding inspection:", error);
+      alert("Failed to add inspection: " + error.message);
+    }
   };
 
   // Handle edit inspection
-  const handleEditInspection = (e) => {
+  const handleEditInspection = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedInspections = inspections.map((inspection) => {
-      if (inspection.id === currentInspection.id) {
-        return {
-          ...inspection,
-          client: formData.client,
-          property: formData.property,
-          date: combineDateAndTime(formData.date, formData.time),
-          status: formData.status,
-          agent: formData.agent,
-          contact: formData.contact,
-          notes: formData.notes,
-        };
+    try {
+      // Prepare data for API
+      const inspectionData = {
+        client: formData.clientId,
+        property: formData.propertyId,
+        propertyType: formData.propertyType,
+        date: combineDateAndTime(formData.date, formData.time),
+        status: formData.status,
+        agent: formData.agentId,
+        notes: formData.notes,
+      };
+
+      const response = await updateInspection(
+        currentInspection.id,
+        inspectionData
+      );
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update inspection");
       }
-      return inspection;
-    });
 
-    setInspections(updatedInspections);
-    closeModals();
+      // Refresh the inspections list
+      const response2 = await getInspections();
 
-    // Show success message (in a real app)
-    alert("Inspection updated successfully!");
+      if (response2.success) {
+        const formattedInspections = formatInspectionData(response2.data);
+
+        setInspections(formattedInspections);
+      }
+
+      closeModals();
+      alert("Inspection updated successfully!");
+    } catch (error) {
+      console.error("Error updating inspection:", error);
+      alert("Failed to update inspection: " + error.message);
+    }
   };
 
   // Handle cancel inspection
-  const handleCancelInspection = (inspectionId) => {
+  const handleCancelInspection = async (inspectionId) => {
     if (window.confirm("Are you sure you want to cancel this inspection?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedInspections = inspections.map((inspection) => {
-        if (inspection.id === inspectionId) {
-          return {
-            ...inspection,
-            status: "Cancelled",
-          };
+      try {
+        const response = await updateInspection(inspectionId, {
+          status: "Cancelled",
+        });
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to cancel inspection");
         }
-        return inspection;
-      });
 
-      setInspections(updatedInspections);
+        // Refresh the inspections list
+        const response2 = await getInspections();
 
-      // Show success message (in a real app)
-      alert("Inspection cancelled successfully!");
+        if (response2.success) {
+          const formattedInspections = formatInspectionData(response2.data);
+
+          setInspections(formattedInspections);
+        }
+
+        alert("Inspection cancelled successfully!");
+      } catch (error) {
+        console.error("Error cancelling inspection:", error);
+        alert("Failed to cancel inspection: " + error.message);
+      }
     }
   };
 
   // Handle complete inspection
-  const handleCompleteInspection = (inspectionId) => {
+  const handleCompleteInspection = async (inspectionId) => {
     if (window.confirm("Mark this inspection as completed?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedInspections = inspections.map((inspection) => {
-        if (inspection.id === inspectionId) {
-          return {
-            ...inspection,
-            status: "Completed",
-          };
+      try {
+        const response = await updateInspection(inspectionId, {
+          status: "Completed",
+        });
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to complete inspection");
         }
-        return inspection;
-      });
 
-      setInspections(updatedInspections);
+        // Refresh the inspections list
+        const response2 = await getInspections();
 
-      // Show success message (in a real app)
-      alert("Inspection marked as completed!");
+        if (response2.success) {
+          const formattedInspections = formatInspectionData(response2.data);
+
+          setInspections(formattedInspections);
+        }
+
+        alert("Inspection marked as completed!");
+      } catch (error) {
+        console.error("Error completing inspection:", error);
+        alert("Failed to complete inspection: " + error.message);
+      }
     }
   };
 
@@ -263,71 +362,15 @@ export default function ManageInspections() {
       try {
         setLoading(true);
 
-        // In a real app, this would fetch from your API
-        // const response = await fetch('/api/admin/inspections', {
-        //   headers: {
-        //     'Authorization': `Bearer ${adminToken}`
-        //   }
-        // });
-        //
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch inspections');
-        // }
-        //
-        // const data = await response.json();
+        const response = await getInspections();
 
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (!response.success) {
+          throw new Error("Failed to fetch inspections");
+        }
 
-        const mockInspections = [
-          {
-            id: 1,
-            client: "John Doe",
-            property: "Premium Land in Location A",
-            date: "2023-05-15T10:00:00",
-            status: "Scheduled",
-            agent: "Sarah Johnson",
-            contact: "john@example.com",
-          },
-          {
-            id: 2,
-            client: "Jane Smith",
-            property: "Exclusive Land in Location B",
-            date: "2023-05-16T14:30:00",
-            status: "Confirmed",
-            agent: "Michael Brown",
-            contact: "jane@example.com",
-          },
-          {
-            id: 3,
-            client: "Robert Johnson",
-            property: "Strategic Land in Location C",
-            date: "2023-05-10T11:00:00",
-            status: "Completed",
-            agent: "Sarah Johnson",
-            contact: "robert@example.com",
-          },
-          {
-            id: 4,
-            client: "Emily Davis",
-            property: "Residential Land in Location D",
-            date: "2023-05-20T09:30:00",
-            status: "Scheduled",
-            agent: "David Wilson",
-            contact: "emily@example.com",
-          },
-          {
-            id: 5,
-            client: "Michael Wilson",
-            property: "Commercial Land in Location E",
-            date: "2023-05-12T13:00:00",
-            status: "Cancelled",
-            agent: "Michael Brown",
-            contact: "michael@example.com",
-          },
-        ];
+        const formattedInspections = formatInspectionData(response.data);
 
-        setInspections(mockInspections);
+        setInspections(formattedInspections);
       } catch (error) {
         console.error("Error fetching inspections:", error);
       } finally {
@@ -348,153 +391,151 @@ export default function ManageInspections() {
 
   return (
     <>
-    
-   
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Inspections</h1>
-        <button
-          onClick={openAddModal}
-          className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
-        >
-          Schedule Inspection
-        </button>
-      </div>
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Manage Inspections</h1>
+          <button
+            onClick={openAddModal}
+            className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+          >
+            Schedule Inspection
+          </button>
+        </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Client
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Property
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Date & Time
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Agent
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Contact
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {inspections.map((inspection) => (
-                <tr key={inspection.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {inspection.client}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {inspection.property}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {new Date(inspection.date).toLocaleDateString()} at{" "}
-                      {new Date(inspection.date).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        inspection.status === "Scheduled"
-                          ? "bg-blue-100 text-blue-800"
-                          : inspection.status === "Confirmed"
-                          ? "bg-green-100 text-green-800"
-                          : inspection.status === "Completed"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {inspection.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {inspection.agent}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {inspection.contact}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => openViewModal(inspection)}
-                      className="text-gray-600 hover:text-gray-900 mr-3"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => openEditModal(inspection)}
-                      className="text-primary-blue hover:text-accent-green mr-3"
-                    >
-                      Edit
-                    </button>
-                    {inspection.status !== "Completed" &&
-                      inspection.status !== "Cancelled" && (
-                        <>
-                          <button
-                            onClick={() =>
-                              handleCancelInspection(inspection.id)
-                            }
-                            className="text-red-600 hover:text-red-800 mr-3"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleCompleteInspection(inspection.id)
-                            }
-                            className="text-green-600 hover:text-green-800"
-                          >
-                            Complete
-                          </button>
-                        </>
-                      )}
-                  </td>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Client
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Property
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Date & Time
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Status
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Agent
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Contact
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {inspections.map((inspection) => (
+                  <tr key={inspection.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {inspection.client}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {inspection.property}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {new Date(inspection.date).toLocaleDateString()} at{" "}
+                        {new Date(inspection.date).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          inspection.status === "Scheduled"
+                            ? "bg-blue-100 text-blue-800"
+                            : inspection.status === "Confirmed"
+                            ? "bg-green-100 text-green-800"
+                            : inspection.status === "Completed"
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {inspection.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {inspection.agent}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {inspection.contact}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => openViewModal(inspection)}
+                        className="text-gray-600 hover:text-gray-900 mr-3"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => openEditModal(inspection)}
+                        className="text-primary-blue hover:text-accent-green mr-3"
+                      >
+                        Edit
+                      </button>
+                      {inspection.status !== "Completed" &&
+                        inspection.status !== "Cancelled" && (
+                          <>
+                            <button
+                              onClick={() =>
+                                handleCancelInspection(inspection.id)
+                              }
+                              className="text-red-600 hover:text-red-800 mr-3"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleCompleteInspection(inspection.id)
+                              }
+                              className="text-green-600 hover:text-green-800"
+                            >
+                              Complete
+                            </button>
+                          </>
+                        )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
 
       {/* Add Inspection Modal */}
       {isAddModalOpen && (
@@ -542,7 +583,9 @@ export default function ManageInspections() {
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                 />
                 {formErrors.client && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.client}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.client}
+                  </p>
                 )}
               </div>
 
@@ -564,7 +607,9 @@ export default function ManageInspections() {
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                 />
                 {formErrors.property && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.property}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.property}
+                  </p>
                 )}
               </div>
 
@@ -587,7 +632,9 @@ export default function ManageInspections() {
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                   />
                   {formErrors.date && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.date}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors.date}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -608,7 +655,9 @@ export default function ManageInspections() {
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                   />
                   {formErrors.time && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.time}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors.time}
+                    </p>
                   )}
                 </div>
               </div>
@@ -652,7 +701,9 @@ export default function ManageInspections() {
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                 />
                 {formErrors.agent && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.agent}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.agent}
+                  </p>
                 )}
               </div>
 
@@ -675,7 +726,9 @@ export default function ManageInspections() {
                   placeholder="Email or phone number"
                 />
                 {formErrors.contact && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.contact}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.contact}
+                  </p>
                 )}
               </div>
 
@@ -762,7 +815,9 @@ export default function ManageInspections() {
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                 />
                 {formErrors.client && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.client}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.client}
+                  </p>
                 )}
               </div>
 
@@ -784,7 +839,9 @@ export default function ManageInspections() {
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                 />
                 {formErrors.property && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.property}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.property}
+                  </p>
                 )}
               </div>
 
@@ -807,7 +864,9 @@ export default function ManageInspections() {
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                   />
                   {formErrors.date && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.date}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors.date}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -828,7 +887,9 @@ export default function ManageInspections() {
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                   />
                   {formErrors.time && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.time}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors.time}
+                    </p>
                   )}
                 </div>
               </div>
@@ -872,7 +933,9 @@ export default function ManageInspections() {
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                 />
                 {formErrors.agent && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.agent}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.agent}
+                  </p>
                 )}
               </div>
 
@@ -895,7 +958,9 @@ export default function ManageInspections() {
                   placeholder="Email or phone number"
                 />
                 {formErrors.contact && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.contact}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.contact}
+                  </p>
                 )}
               </div>
 
@@ -966,12 +1031,16 @@ export default function ManageInspections() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <div className="mb-4">
-                  <h3 className="text-lg font-medium mb-2">Client Information</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    Client Information
+                  </h3>
                   <p className="text-gray-700">
-                    <span className="font-semibold">Name:</span> {currentInspection.client}
+                    <span className="font-semibold">Name:</span>{" "}
+                    {currentInspection.client}
                   </p>
                   <p className="text-gray-700">
-                    <span className="font-semibold">Contact:</span> {currentInspection.contact}
+                    <span className="font-semibold">Contact:</span>{" "}
+                    {currentInspection.contact}
                   </p>
                 </div>
 
@@ -983,7 +1052,9 @@ export default function ManageInspections() {
 
               <div>
                 <div className="mb-4">
-                  <h3 className="text-lg font-medium mb-2">Inspection Details</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    Inspection Details
+                  </h3>
                   <p className="text-gray-700">
                     <span className="font-semibold">Date & Time:</span>{" "}
                     {new Date(currentInspection.date).toLocaleDateString()} at{" "}
@@ -1009,7 +1080,8 @@ export default function ManageInspections() {
                     </span>
                   </p>
                   <p className="text-gray-700">
-                    <span className="font-semibold">Agent:</span> {currentInspection.agent}
+                    <span className="font-semibold">Agent:</span>{" "}
+                    {currentInspection.agent}
                   </p>
                 </div>
               </div>
@@ -1059,8 +1131,6 @@ export default function ManageInspections() {
           </div>
         </div>
       )}
-
-</>
-    
+    </>
   );
 }

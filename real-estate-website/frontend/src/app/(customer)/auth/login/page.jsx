@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { loginUser } from "../../../../utils/api";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -27,27 +27,11 @@ export default function Login() {
     setError("");
 
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error('Invalid email or password');
-      // }
-      //
-      // const data = await response.json();
-      // localStorage.setItem('token', data.token);
+      // Call the real API endpoint for user login
+      await loginUser(formData);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // For demo purposes, set a dummy token
-      const dummyToken = "demo-token-" + Date.now();
-      localStorage.setItem("token", dummyToken);
-      Cookies.set("token", dummyToken, { expires: 7, path: "/" });
+      // The loginUser function already sets the token
+      // No need to manually set the token here
 
       // Redirect to dashboard
       router.push("/dashboard/profile");

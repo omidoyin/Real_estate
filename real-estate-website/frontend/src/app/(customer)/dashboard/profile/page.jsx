@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { removeToken } from "../../../../utils/auth";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -83,9 +83,8 @@ export default function Profile() {
   };
 
   const handleLogout = () => {
-    // Clear token from localStorage and cookies
-    localStorage.removeItem("token");
-    Cookies.remove("token", { path: "/" });
+    // Use the auth utility function to remove the token
+    removeToken();
 
     // Redirect to login page
     router.push("/auth/login");

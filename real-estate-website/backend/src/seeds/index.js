@@ -8,12 +8,18 @@ const House = require("../models/House");
 const Apartment = require("../models/Apartment");
 const Service = require("../models/Service");
 const User = require("../models/User");
+const Announcement = require("../models/Announcement");
+const Team = require("../models/Team");
+const Inspection = require("../models/Inspection");
 
 // Load seed functions
 const seedLands = require("./landSeeds");
 const seedHouses = require("./houseSeeds");
 const seedApartments = require("./apartmentSeeds");
 const seedServices = require("./serviceSeeds");
+const seedAnnouncements = require("./announcementSeeds");
+const seedTeams = require("./teamSeeds");
+const seedInspections = require("./inspectionSeeds");
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +44,9 @@ const seedDatabase = async () => {
     await House.deleteMany({});
     await Apartment.deleteMany({});
     await Service.deleteMany({});
+    await Announcement.deleteMany({});
+    await Team.deleteMany({});
+    await Inspection.deleteMany({});
 
     // Keep users but clear their relationships
     // Don't delete users to preserve existing accounts
@@ -109,6 +118,18 @@ const seedDatabase = async () => {
     // Seed services
     const services = await seedServices();
     console.log(`${services.length} services created`);
+
+    // Seed teams (must be before inspections)
+    const teams = await seedTeams();
+    console.log(`${teams.length} team members created`);
+
+    // Seed announcements
+    const announcements = await seedAnnouncements();
+    console.log(`${announcements.length} announcements created`);
+
+    // Seed inspections (must be after lands, houses, apartments, users, and teams)
+    const inspections = await seedInspections();
+    console.log(`${inspections.length} inspections created`);
 
     console.log("Database seeded successfully");
     process.exit(0);

@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getTeams,
+  addTeamMember,
+  updateTeamMember,
+  deleteTeamMember,
+} from "../../../../utils/api";
 
 export default function ManageTeams() {
   const [team, setTeam] = useState([]);
@@ -108,75 +114,141 @@ export default function ManageTeams() {
   };
 
   // Handle add team member
-  const handleAddMember = (e) => {
+  const handleAddMember = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newMember = {
-      id: team.length + 1,
-      name: formData.name,
-      position: formData.position,
-      email: formData.email,
-      phone: formData.phone,
-      status: formData.status,
-      bio: formData.bio,
-      joinDate: new Date().toISOString().split("T")[0],
-    };
+    try {
+      const response = await addTeamMember({
+        name: formData.name,
+        position: formData.position,
+        email: formData.email,
+        phone: formData.phone,
+        status: formData.status,
+        bio: formData.bio,
+      });
 
-    setTeam([...team, newMember]);
-    closeModals();
+      if (!response.success) {
+        throw new Error(response.message || "Failed to add team member");
+      }
 
-    // Show success message (in a real app)
-    alert("Team member added successfully!");
+      // Refresh the team list
+      const teamsResponse = await getTeams();
+      if (teamsResponse.success) {
+        const formattedTeam = teamsResponse.data.map((member) => ({
+          id: member._id,
+          name: member.name,
+          position: member.position,
+          email: member.email,
+          phone: member.phone,
+          bio: member.bio || "",
+          photo: member.photo || null,
+          status: member.status,
+          socialMedia: member.socialMedia || {},
+          joinDate: new Date(member.createdAt).toISOString().split("T")[0],
+        }));
+
+        setTeam(formattedTeam);
+      }
+
+      closeModals();
+      alert("Team member added successfully!");
+    } catch (error) {
+      console.error("Error adding team member:", error);
+      alert("Failed to add team member: " + error.message);
+    }
   };
 
   // Handle edit team member
-  const handleEditMember = (e) => {
+  const handleEditMember = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedTeam = team.map((member) => {
-      if (member.id === currentMember.id) {
-        return {
-          ...member,
-          name: formData.name,
-          position: formData.position,
-          email: formData.email,
-          phone: formData.phone,
-          status: formData.status,
-          bio: formData.bio,
-        };
+    try {
+      const response = await updateTeamMember(currentMember.id, {
+        name: formData.name,
+        position: formData.position,
+        email: formData.email,
+        phone: formData.phone,
+        status: formData.status,
+        bio: formData.bio,
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update team member");
       }
-      return member;
-    });
 
-    setTeam(updatedTeam);
-    closeModals();
+      // Refresh the team list
+      const teamsResponse = await getTeams();
+      if (teamsResponse.success) {
+        const formattedTeam = teamsResponse.data.map((member) => ({
+          id: member._id,
+          name: member.name,
+          position: member.position,
+          email: member.email,
+          phone: member.phone,
+          bio: member.bio || "",
+          photo: member.photo || null,
+          status: member.status,
+          socialMedia: member.socialMedia || {},
+          joinDate: new Date(member.createdAt).toISOString().split("T")[0],
+        }));
 
-    // Show success message (in a real app)
-    alert("Team member updated successfully!");
+        setTeam(formattedTeam);
+      }
+
+      closeModals();
+      alert("Team member updated successfully!");
+    } catch (error) {
+      console.error("Error updating team member:", error);
+      alert("Failed to update team member: " + error.message);
+    }
   };
 
   // Handle remove team member
-  const handleRemoveMember = (memberId) => {
+  const handleRemoveMember = async (memberId) => {
     if (window.confirm("Are you sure you want to remove this team member?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedTeam = team.filter((member) => member.id !== memberId);
-      setTeam(updatedTeam);
+      try {
+        const response = await deleteTeamMember(memberId);
 
-      // Show success message (in a real app)
-      alert("Team member removed successfully!");
+        if (!response.success) {
+          throw new Error(response.message || "Failed to delete team member");
+        }
+
+        // Refresh the team list
+        const teamsResponse = await getTeams();
+        if (teamsResponse.success) {
+          const formattedTeam = teamsResponse.data.map((member) => ({
+            id: member._id,
+            name: member.name,
+            position: member.position,
+            email: member.email,
+            phone: member.phone,
+            bio: member.bio || "",
+            photo: member.photo || null,
+            status: member.status,
+            socialMedia: member.socialMedia || {},
+            joinDate: new Date(member.createdAt).toISOString().split("T")[0],
+          }));
+
+          setTeam(formattedTeam);
+        } else {
+          // If refresh fails, just remove from local state
+          const updatedTeam = team.filter((member) => member.id !== memberId);
+          setTeam(updatedTeam);
+        }
+
+        alert("Team member removed successfully!");
+      } catch (error) {
+        console.error("Error removing team member:", error);
+        alert("Failed to remove team member: " + error.message);
+      }
     }
   };
 
@@ -193,71 +265,26 @@ export default function ManageTeams() {
       try {
         setLoading(true);
 
-        // In a real app, this would fetch from your API
-        // const response = await fetch('/api/admin/team', {
-        //   headers: {
-        //     'Authorization': `Bearer ${adminToken}`
-        //   }
-        // });
-        //
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch team');
-        // }
-        //
-        // const data = await response.json();
+        const response = await getTeams();
 
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (!response.success) {
+          throw new Error("Failed to fetch team members");
+        }
 
-        const mockTeam = [
-          {
-            id: 1,
-            name: "John Smith",
-            position: "CEO",
-            email: "john@example.com",
-            phone: "(555) 123-4567",
-            joinDate: "2020-01-15",
-            status: "Active",
-          },
-          {
-            id: 2,
-            name: "Sarah Johnson",
-            position: "Sales Manager",
-            email: "sarah@example.com",
-            phone: "(555) 234-5678",
-            joinDate: "2020-03-20",
-            status: "Active",
-          },
-          {
-            id: 3,
-            name: "Michael Brown",
-            position: "Property Consultant",
-            email: "michael@example.com",
-            phone: "(555) 345-6789",
-            joinDate: "2021-02-10",
-            status: "Active",
-          },
-          {
-            id: 4,
-            name: "Emily Davis",
-            position: "Marketing Specialist",
-            email: "emily@example.com",
-            phone: "(555) 456-7890",
-            joinDate: "2021-05-05",
-            status: "On Leave",
-          },
-          {
-            id: 5,
-            name: "David Wilson",
-            position: "Financial Advisor",
-            email: "david@example.com",
-            phone: "(555) 567-8901",
-            joinDate: "2022-01-10",
-            status: "Active",
-          },
-        ];
+        const formattedTeam = response.data.map((member) => ({
+          id: member._id,
+          name: member.name,
+          position: member.position,
+          email: member.email,
+          phone: member.phone,
+          bio: member.bio || "",
+          photo: member.photo || null,
+          status: member.status,
+          socialMedia: member.socialMedia || {},
+          joinDate: new Date(member.createdAt).toISOString().split("T")[0],
+        }));
 
-        setTeam(mockTeam);
+        setTeam(formattedTeam);
       } catch (error) {
         console.error("Error fetching team:", error);
       } finally {

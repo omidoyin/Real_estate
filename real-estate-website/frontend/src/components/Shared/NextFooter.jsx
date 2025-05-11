@@ -1,8 +1,15 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function Footer() {
+  const [year, setYear] = useState("2023");
+
+  useEffect(() => {
+    setYear(new Date().getFullYear().toString());
+  }, []);
+
   return (
     <footer className="bg-white py-8">
       <div className="container mx-auto px-4">
@@ -10,16 +17,45 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">Real Estate</h3>
             <p className="text-gray-600">
-              Your trusted partner in finding the perfect land property for your needs.
+              Your trusted partner in finding the perfect land property for your
+              needs.
             </p>
           </div>
           <div>
             <h3 className="text-xl font-bold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><Link href="/about" className="text-gray-600 hover:text-primary-blue">About Us</Link></li>
-              <li><Link href="/lands/available" className="text-gray-600 hover:text-primary-blue">Available Lands</Link></li>
-              <li><Link href="/contact" className="text-gray-600 hover:text-primary-blue">Contact Us</Link></li>
-              <li><Link href="/book-inspection" className="text-gray-600 hover:text-primary-blue">Book Inspection</Link></li>
+              <li>
+                <Link
+                  href="/about"
+                  className="text-gray-600 hover:text-primary-blue"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/lands/available"
+                  className="text-gray-600 hover:text-primary-blue"
+                >
+                  Available Lands
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-gray-600 hover:text-primary-blue"
+                >
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/book-inspection"
+                  className="text-gray-600 hover:text-primary-blue"
+                >
+                  Book Inspection
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
@@ -33,7 +69,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-200 mt-8 pt-8 text-center text-gray-600">
-          <p>&copy; {new Date().getFullYear()} Real Estate. All rights reserved.</p>
+          <p>&copy; {year} Real Estate. All rights reserved.</p>
         </div>
       </div>
     </footer>

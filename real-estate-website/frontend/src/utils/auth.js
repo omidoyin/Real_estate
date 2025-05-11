@@ -51,9 +51,7 @@ export const loginUser = async (credentials) => {
 // Logout user
 export const logoutUser = () => {
   removeToken();
-  if (typeof window !== "undefined") {
-    window.location.href = "/auth/login";
-  }
+  // Navigation should be handled by the component using this function
 };
 
 // Check if user is authenticated

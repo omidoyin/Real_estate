@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Cookies from "js-cookie";
+import { adminLogin } from "../../../../utils/api";
 
 export default function AdminLogin() {
   const [formData, setFormData] = useState({
@@ -27,37 +27,14 @@ export default function AdminLogin() {
     setError("");
 
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch('/api/admin/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error('Invalid credentials');
-      // }
-      //
-      // const data = await response.json();
+      // Call the real API endpoint for admin login
+      await adminLogin(formData);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // The adminLogin function already sets the token via setAdminToken
+      // No need to manually set the token here
 
-      // For demo purposes, check if using admin credentials
-      if (
-        formData.email === "admin@example.com" &&
-        formData.password === "admin123"
-      ) {
-        // Set admin token in cookies
-        const adminToken = "admin-token-" + Date.now();
-        localStorage.setItem("adminToken", adminToken);
-        Cookies.set("adminToken", adminToken, { expires: 7, path: "/" });
-
-        // Redirect to admin dashboard
-        router.push("/admin/dashboard");
-      } else {
-        throw new Error("Invalid admin credentials");
-      }
+      // Redirect to admin dashboard
+      router.push("/admin/dashboard");
     } catch (error) {
       setError(error.message || "Invalid email or password");
     } finally {

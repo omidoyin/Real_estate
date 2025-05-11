@@ -4,6 +4,9 @@ const House = require("../models/House");
 const Apartment = require("../models/Apartment");
 const Service = require("../models/Service");
 const Payment = require("../models/Payment");
+const Announcement = require("../models/Announcement");
+const Team = require("../models/Team");
+const Inspection = require("../models/Inspection");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -13,33 +16,61 @@ const jwt = require("jsonwebtoken");
  * @access Public
  */
 const adminLogin = async (req, res) => {
+  console.log(`\n🔐 ADMIN LOGIN ATTEMPT`);
   const { email, password } = req.body;
+
+  console.log(`Login attempt for email: ${email}`);
 
   try {
     // Check if user exists and is an admin
-    const admin = await User.findOne({ email, role: "admin" });
+    console.log(`Looking up admin user with email: ${email}`);
+    const admin = await User.findOne({ email });
+
     if (!admin) {
+      console.log(`❌ ADMIN LOGIN FAILED: User with email ${email} not found`);
       return res.status(404).json({
         success: false,
         message: "Admin not found",
       });
     }
 
+    console.log(
+      `User found: ${admin.email} (${admin._id}), Role: ${admin.role}`
+    );
+
+    // Check if user is an admin
+    if (admin.role !== "admin") {
+      console.log(
+        `❌ ADMIN LOGIN FAILED: User ${email} is not an admin (role: ${admin.role})`
+      );
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin privileges required.",
+      });
+    }
+
     // Check password
+    console.log(`Verifying password for admin: ${admin.email}`);
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
+      console.log(`❌ ADMIN LOGIN FAILED: Invalid password for ${email}`);
       return res.status(401).json({
         success: false,
         message: "Invalid credentials",
       });
     }
 
+    console.log(`✅ Password verified successfully for admin: ${admin.email}`);
+
     // Generate JWT token
+    console.log(`Generating JWT token for admin: ${admin.email}`);
     const token = jwt.sign(
       { id: admin._id, role: admin.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
+
+    console.log(`Token generated with expiry: 1 day`);
 
     // Set token in cookie
     res.cookie("token", token, {
@@ -47,6 +78,8 @@ const adminLogin = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
+
+    console.log(`✅ ADMIN LOGIN SUCCESSFUL: ${admin.email} (${admin._id})`);
 
     res.status(200).json({
       success: true,
@@ -59,7 +92,8 @@ const adminLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error logging in admin:", error);
+    console.error("❌ ERROR DURING ADMIN LOGIN:", error);
+    console.log(`Error name: ${error.name}, Message: ${error.message}`);
     res.status(500).json({
       success: false,
       message: "Error logging in admin",
@@ -428,12 +462,11 @@ const deleteUser = async (req, res) => {
  */
 const getAnnouncements = async (req, res) => {
   try {
-    // This is a placeholder for the announcements functionality
-    // In a real application, you would have an Announcement model
+    const announcements = await Announcement.find().sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
-      data: [],
+      data: announcements,
     });
   } catch (error) {
     console.error("Error fetching announcements:", error);
@@ -452,12 +485,35 @@ const getAnnouncements = async (req, res) => {
  */
 const addAnnouncement = async (req, res) => {
   try {
-    // This is a placeholder for the announcements functionality
-    // In a real application, you would have an Announcement model
+    const { title, content, type, startDate, endDate, status, target, image } =
+      req.body;
+
+    // Validate required fields
+    if (!title || !content || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields",
+      });
+    }
+
+    // Create new announcement
+    const announcement = new Announcement({
+      title,
+      content,
+      type: type || "General",
+      startDate,
+      endDate,
+      status: status || "Active",
+      target: target || "All Users",
+      image,
+    });
+
+    await announcement.save();
 
     res.status(201).json({
       success: true,
       message: "Announcement added successfully",
+      data: announcement,
     });
   } catch (error) {
     console.error("Error adding announcement:", error);
@@ -476,12 +532,36 @@ const addAnnouncement = async (req, res) => {
  */
 const updateAnnouncement = async (req, res) => {
   try {
-    // This is a placeholder for the announcements functionality
-    // In a real application, you would have an Announcement model
+    const { id } = req.params;
+    const { title, content, type, startDate, endDate, status, target, image } =
+      req.body;
+
+    // Find announcement
+    const announcement = await Announcement.findById(id);
+
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    // Update fields
+    if (title) announcement.title = title;
+    if (content) announcement.content = content;
+    if (type) announcement.type = type;
+    if (startDate) announcement.startDate = startDate;
+    if (endDate) announcement.endDate = endDate;
+    if (status) announcement.status = status;
+    if (target) announcement.target = target;
+    if (image) announcement.image = image;
+
+    await announcement.save();
 
     res.status(200).json({
       success: true,
       message: "Announcement updated successfully",
+      data: announcement,
     });
   } catch (error) {
     console.error("Error updating announcement:", error);
@@ -500,8 +580,17 @@ const updateAnnouncement = async (req, res) => {
  */
 const deleteAnnouncement = async (req, res) => {
   try {
-    // This is a placeholder for the announcements functionality
-    // In a real application, you would have an Announcement model
+    const { id } = req.params;
+
+    // Find and delete announcement
+    const announcement = await Announcement.findByIdAndDelete(id);
+
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -524,12 +613,11 @@ const deleteAnnouncement = async (req, res) => {
  */
 const getTeams = async (req, res) => {
   try {
-    // This is a placeholder for the teams functionality
-    // In a real application, you would have a Team model
+    const teams = await Team.find().sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
-      data: [],
+      data: teams,
     });
   } catch (error) {
     console.error("Error fetching teams:", error);
@@ -548,12 +636,40 @@ const getTeams = async (req, res) => {
  */
 const addTeamMember = async (req, res) => {
   try {
-    // This is a placeholder for the teams functionality
-    // In a real application, you would have a Team model
+    const { name, position, email, phone, bio, status, socialMedia } = req.body;
+    let photo = null;
+
+    // Check if media was uploaded
+    if (req.file) {
+      photo = req.file.path; // Cloudinary URL
+    }
+
+    // Validate required fields
+    if (!name || !position || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields",
+      });
+    }
+
+    // Create new team member
+    const teamMember = new Team({
+      name,
+      position,
+      email,
+      phone,
+      photo,
+      bio,
+      status: status || "Active",
+      socialMedia: socialMedia || {},
+    });
+
+    await teamMember.save();
 
     res.status(201).json({
       success: true,
       message: "Team member added successfully",
+      data: teamMember,
     });
   } catch (error) {
     console.error("Error adding team member:", error);
@@ -572,12 +688,39 @@ const addTeamMember = async (req, res) => {
  */
 const updateTeamMember = async (req, res) => {
   try {
-    // This is a placeholder for the teams functionality
-    // In a real application, you would have a Team model
+    const { id } = req.params;
+    const { name, position, email, phone, bio, status, socialMedia } = req.body;
+
+    // Find team member
+    const teamMember = await Team.findById(id);
+
+    if (!teamMember) {
+      return res.status(404).json({
+        success: false,
+        message: "Team member not found",
+      });
+    }
+
+    // Update fields
+    if (name) teamMember.name = name;
+    if (position) teamMember.position = position;
+    if (email) teamMember.email = email;
+    if (phone) teamMember.phone = phone;
+    if (bio) teamMember.bio = bio;
+    if (status) teamMember.status = status;
+    if (socialMedia) teamMember.socialMedia = socialMedia;
+
+    // Check if media was uploaded
+    if (req.file) {
+      teamMember.photo = req.file.path; // Cloudinary URL
+    }
+
+    await teamMember.save();
 
     res.status(200).json({
       success: true,
       message: "Team member updated successfully",
+      data: teamMember,
     });
   } catch (error) {
     console.error("Error updating team member:", error);
@@ -596,8 +739,17 @@ const updateTeamMember = async (req, res) => {
  */
 const deleteTeamMember = async (req, res) => {
   try {
-    // This is a placeholder for the teams functionality
-    // In a real application, you would have a Team model
+    const { id } = req.params;
+
+    // Find and delete team member
+    const teamMember = await Team.findByIdAndDelete(id);
+
+    if (!teamMember) {
+      return res.status(404).json({
+        success: false,
+        message: "Team member not found",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -620,12 +772,18 @@ const deleteTeamMember = async (req, res) => {
  */
 const getInspections = async (req, res) => {
   try {
-    // This is a placeholder for the inspections functionality
-    // In a real application, you would have an Inspection model
+    const inspections = await Inspection.find()
+      .sort({ date: -1 })
+      .populate("client", "name email phone")
+      .populate({
+        path: "property",
+        select: "title location price",
+      })
+      .populate("agent", "name position email");
 
     res.status(200).json({
       success: true,
-      data: [],
+      data: inspections,
     });
   } catch (error) {
     console.error("Error fetching inspections:", error);
@@ -644,12 +802,52 @@ const getInspections = async (req, res) => {
  */
 const addInspection = async (req, res) => {
   try {
-    // This is a placeholder for the inspections functionality
-    // In a real application, you would have an Inspection model
+    const {
+      client,
+      property,
+      propertyType,
+      date,
+      status,
+      agent,
+      notes,
+      followUpDate,
+    } = req.body;
+
+    // Validate required fields
+    if (!client || !property || !propertyType || !date || !agent) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields",
+      });
+    }
+
+    // Create new inspection
+    const inspection = new Inspection({
+      client,
+      property,
+      propertyType,
+      date,
+      status: status || "Scheduled",
+      agent,
+      notes,
+      followUpDate,
+    });
+
+    await inspection.save();
+
+    // Populate the inspection data for the response
+    const populatedInspection = await Inspection.findById(inspection._id)
+      .populate("client", "name email phone")
+      .populate({
+        path: "property",
+        select: "title location price",
+      })
+      .populate("agent", "name position email");
 
     res.status(201).json({
       success: true,
       message: "Inspection added successfully",
+      data: populatedInspection,
     });
   } catch (error) {
     console.error("Error adding inspection:", error);
@@ -668,12 +866,55 @@ const addInspection = async (req, res) => {
  */
 const updateInspection = async (req, res) => {
   try {
-    // This is a placeholder for the inspections functionality
-    // In a real application, you would have an Inspection model
+    const { id } = req.params;
+    const {
+      client,
+      property,
+      propertyType,
+      date,
+      status,
+      agent,
+      notes,
+      feedback,
+      followUpDate,
+    } = req.body;
+
+    // Find inspection
+    const inspection = await Inspection.findById(id);
+
+    if (!inspection) {
+      return res.status(404).json({
+        success: false,
+        message: "Inspection not found",
+      });
+    }
+
+    // Update fields
+    if (client) inspection.client = client;
+    if (property) inspection.property = property;
+    if (propertyType) inspection.propertyType = propertyType;
+    if (date) inspection.date = date;
+    if (status) inspection.status = status;
+    if (agent) inspection.agent = agent;
+    if (notes) inspection.notes = notes;
+    if (feedback) inspection.feedback = feedback;
+    if (followUpDate) inspection.followUpDate = followUpDate;
+
+    await inspection.save();
+
+    // Populate the inspection data for the response
+    const populatedInspection = await Inspection.findById(inspection._id)
+      .populate("client", "name email phone")
+      .populate({
+        path: "property",
+        select: "title location price",
+      })
+      .populate("agent", "name position email");
 
     res.status(200).json({
       success: true,
       message: "Inspection updated successfully",
+      data: populatedInspection,
     });
   } catch (error) {
     console.error("Error updating inspection:", error);
@@ -692,8 +933,17 @@ const updateInspection = async (req, res) => {
  */
 const deleteInspection = async (req, res) => {
   try {
-    // This is a placeholder for the inspections functionality
-    // In a real application, you would have an Inspection model
+    const { id } = req.params;
+
+    // Find and delete inspection
+    const inspection = await Inspection.findByIdAndDelete(id);
+
+    if (!inspection) {
+      return res.status(404).json({
+        success: false,
+        message: "Inspection not found",
+      });
+    }
 
     res.status(200).json({
       success: true,

@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getAnnouncements,
+  addAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+} from "../../../../utils/api";
 
 export default function ManageAnnouncements() {
   const [announcements, setAnnouncements] = useState([]);
@@ -14,7 +20,7 @@ export default function ManageAnnouncements() {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    status: "Draft",
+    status: "Scheduled",
     author: "Admin",
   });
   const [formErrors, setFormErrors] = useState({});
@@ -58,7 +64,7 @@ export default function ManageAnnouncements() {
     setFormData({
       title: "",
       content: "",
-      status: "Draft",
+      status: "Scheduled",
       author: "Admin",
     });
     setFormErrors({});
@@ -92,97 +98,159 @@ export default function ManageAnnouncements() {
   };
 
   // Handle add announcement
-  const handleAddAnnouncement = (e) => {
+  const handleAddAnnouncement = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newAnnouncement = {
-      id: announcements.length + 1,
-      title: formData.title,
-      content: formData.content,
-      status: formData.status,
-      author: formData.author,
-      date: new Date().toISOString().split("T")[0],
-    };
+    try {
+      const today = new Date();
+      const oneMonthLater = new Date();
+      oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
 
-    setAnnouncements([...announcements, newAnnouncement]);
-    closeModals();
+      const announcementData = {
+        title: formData.title,
+        content: formData.content,
+        type: "General",
+        startDate: today.toISOString(),
+        endDate: oneMonthLater.toISOString(),
+        status: formData.status,
+        target: "All Users",
+      };
 
-    // Show success message (in a real app)
-    alert("Announcement added successfully!");
+      const response = await addAnnouncement(announcementData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to add announcement");
+      }
+
+      // Refresh the announcements list
+      await fetchAnnouncements();
+
+      closeModals();
+      alert("Announcement added successfully!");
+    } catch (error) {
+      console.error("Error adding announcement:", error);
+      alert("Failed to add announcement: " + error.message);
+    }
   };
 
   // Handle edit announcement
-  const handleEditAnnouncement = (e) => {
+  const handleEditAnnouncement = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedAnnouncements = announcements.map((announcement) => {
-      if (announcement.id === currentAnnouncement.id) {
-        return {
-          ...announcement,
-          title: formData.title,
-          content: formData.content,
-          status: formData.status,
-          author: formData.author,
-        };
+    try {
+      const announcementData = {
+        title: formData.title,
+        content: formData.content,
+        status: formData.status,
+      };
+
+      const response = await updateAnnouncement(
+        currentAnnouncement.id,
+        announcementData
+      );
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update announcement");
       }
-      return announcement;
-    });
 
-    setAnnouncements(updatedAnnouncements);
-    closeModals();
+      // Refresh the announcements list
+      await fetchAnnouncements();
 
-    // Show success message (in a real app)
-    alert("Announcement updated successfully!");
+      closeModals();
+      alert("Announcement updated successfully!");
+    } catch (error) {
+      console.error("Error updating announcement:", error);
+      alert("Failed to update announcement: " + error.message);
+    }
   };
 
   // Handle delete announcement
-  const handleDeleteAnnouncement = (announcementId) => {
+  const handleDeleteAnnouncement = async (announcementId) => {
     if (window.confirm("Are you sure you want to delete this announcement?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedAnnouncements = announcements.filter(
-        (announcement) => announcement.id !== announcementId
-      );
-      setAnnouncements(updatedAnnouncements);
+      try {
+        const response = await deleteAnnouncement(announcementId);
 
-      // Show success message (in a real app)
-      alert("Announcement deleted successfully!");
+        if (!response.success) {
+          throw new Error(response.message || "Failed to delete announcement");
+        }
+
+        // Refresh the announcements list
+        await fetchAnnouncements();
+
+        alert("Announcement deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting announcement:", error);
+        alert("Failed to delete announcement: " + error.message);
+      }
     }
   };
 
   // Handle publish announcement
-  const handlePublishAnnouncement = (announcementId) => {
+  const handlePublishAnnouncement = async (announcementId) => {
     if (window.confirm("Are you sure you want to publish this announcement?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedAnnouncements = announcements.map((announcement) => {
-        if (announcement.id === announcementId) {
-          return {
-            ...announcement,
-            status: "Published",
-          };
+      try {
+        const response = await updateAnnouncement(announcementId, {
+          status: "Active",
+        });
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to publish announcement");
         }
-        return announcement;
-      });
 
-      setAnnouncements(updatedAnnouncements);
+        // Refresh the announcements list
+        await fetchAnnouncements();
 
-      // Show success message (in a real app)
-      alert("Announcement published successfully!");
+        alert("Announcement published successfully!");
+      } catch (error) {
+        console.error("Error publishing announcement:", error);
+        alert("Failed to publish announcement: " + error.message);
+      }
     }
   };
+
+   const fetchAnnouncements = async () => {
+      try {
+        setLoading(true);
+
+        const response = await getAnnouncements();
+
+        if (!response.success) {
+          throw new Error("Failed to fetch announcements");
+        }
+
+        const formattedAnnouncements = response.data.map((announcement) => ({
+          id: announcement._id,
+          title: announcement.title,
+          content: announcement.content,
+          status: announcement.status,
+          type: announcement.type,
+          startDate: new Date(announcement.startDate)
+            .toISOString()
+            .split("T")[0],
+          endDate: new Date(announcement.endDate).toISOString().split("T")[0],
+          date: new Date(announcement.createdAt).toISOString().split("T")[0],
+          author: "Admin",
+          target: announcement.target,
+        }));
+
+        console.log({formattedAnnouncements});
+        
+
+        // setAnnouncements(formattedAnnouncements);
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   useEffect(() => {
     // Check if admin is authenticated
@@ -193,77 +261,7 @@ export default function ManageAnnouncements() {
     }
 
     // Fetch announcements data
-    const fetchAnnouncements = async () => {
-      try {
-        setLoading(true);
-
-        // In a real app, this would fetch from your API
-        // const response = await fetch('/api/admin/announcements', {
-        //   headers: {
-        //     'Authorization': `Bearer ${adminToken}`
-        //   }
-        // });
-        //
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch announcements');
-        // }
-        //
-        // const data = await response.json();
-
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const mockAnnouncements = [
-          {
-            id: 1,
-            title: "New Properties Available",
-            content: "We have added 5 new premium properties to our listings.",
-            status: "Published",
-            date: "2023-04-15",
-            author: "Admin",
-          },
-          {
-            id: 2,
-            title: "Special Discount for Early Buyers",
-            content: "Get 10% off on all properties purchased before May 31st.",
-            status: "Published",
-            date: "2023-04-10",
-            author: "Admin",
-          },
-          {
-            id: 3,
-            title: "Website Maintenance",
-            content:
-              "The website will be down for maintenance on May 5th from 2-4 AM.",
-            status: "Draft",
-            date: "2023-04-20",
-            author: "Admin",
-          },
-          {
-            id: 4,
-            title: "New Payment Options",
-            content: "We now accept PayPal and cryptocurrency payments.",
-            status: "Published",
-            date: "2023-04-05",
-            author: "Admin",
-          },
-          {
-            id: 5,
-            title: "Holiday Schedule",
-            content: "Our office will be closed on May 29th for Memorial Day.",
-            status: "Draft",
-            date: "2023-04-25",
-            author: "Admin",
-          },
-        ];
-
-        setAnnouncements(mockAnnouncements);
-      } catch (error) {
-        console.error("Error fetching announcements:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+   
 
     fetchAnnouncements();
   }, [router]);
@@ -332,7 +330,7 @@ export default function ManageAnnouncements() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {announcements.map((announcement) => (
+              {announcements?.map((announcement) => (
                 <tr key={announcement.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
@@ -352,9 +350,11 @@ export default function ManageAnnouncements() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        announcement.status === "Published"
+                        announcement.status === "Active"
                           ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          : announcement.status === "Scheduled"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
                       }`}
                     >
                       {announcement.status}
@@ -373,7 +373,7 @@ export default function ManageAnnouncements() {
                     >
                       Edit
                     </button>
-                    {announcement.status === "Draft" && (
+                    {announcement.status === "Scheduled" && (
                       <button
                         className="text-green-600 hover:text-green-800 mr-3"
                         onClick={() =>
@@ -488,8 +488,9 @@ export default function ManageAnnouncements() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
                   >
-                    <option value="Draft">Draft</option>
-                    <option value="Published">Published</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
                   </select>
                 </div>
 

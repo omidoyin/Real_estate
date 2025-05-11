@@ -1,12 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { removeAdminToken } from "../../utils/auth";
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleLogout = () => {
+    removeAdminToken();
+    router.push("/admin/login");
+  };
 
   const navItems = [
     { label: "Dashboard", path: "/admin/dashboard", icon: "dashboard" },
@@ -209,10 +216,7 @@ export default function AdminLayout({ children }) {
             <li className="pt-4 mt-4 border-t border-gray-700">
               <button
                 className="flex items-center px-4 py-3 text-red-400 hover:bg-gray-700 rounded w-full"
-                onClick={() => {
-                  // In a real app, this would call a logout API
-                  window.location.href = "/admin/login";
-                }}
+                onClick={handleLogout}
               >
                 <svg
                   className="w-5 h-5 mr-3"

@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { removeToken } from "../../../utils/auth";
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+
+  const handleLogout = () => {
+    removeToken();
+    router.push("/");
+  };
 
   // Simulate fetching user data
   useEffect(() => {
@@ -79,11 +86,7 @@ export default function DashboardLayout({ children }) {
                 <li className="pt-4 mt-4 border-t border-gray-200">
                   <button
                     className="block w-full text-left py-2 px-4 text-red-600 hover:bg-red-50 rounded"
-                    onClick={() => {
-                      // In a real app, this would call a logout API
-                      // and clear local storage/cookies
-                      window.location.href = "/";
-                    }}
+                    onClick={handleLogout}
                   >
                     Logout
                   </button>
