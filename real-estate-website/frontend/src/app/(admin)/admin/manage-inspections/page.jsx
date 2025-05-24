@@ -384,7 +384,7 @@ export default function ManageInspections() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -396,7 +396,7 @@ export default function ManageInspections() {
           <h1 className="text-2xl font-bold">Manage Inspections</h1>
           <button
             onClick={openAddModal}
-            className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
           >
             Schedule Inspection
           </button>
@@ -503,7 +503,7 @@ export default function ManageInspections() {
                       </button>
                       <button
                         onClick={() => openEditModal(inspection)}
-                        className="text-primary-blue hover:text-accent-green mr-3"
+                        className="text-primary hover:text-primary-text mr-3"
                       >
                         Edit
                       </button>
@@ -580,7 +580,7 @@ export default function ManageInspections() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.client ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
                 {formErrors.client && (
                   <p className="text-red-500 text-sm mt-1">
@@ -604,7 +604,7 @@ export default function ManageInspections() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.property ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
                 {formErrors.property && (
                   <p className="text-red-500 text-sm mt-1">
@@ -629,7 +629,7 @@ export default function ManageInspections() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.date ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.date && (
                     <p className="text-red-500 text-sm mt-1">
@@ -652,7 +652,7 @@ export default function ManageInspections() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.time ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.time && (
                     <p className="text-red-500 text-sm mt-1">
@@ -674,7 +674,7 @@ export default function ManageInspections() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="Scheduled">Scheduled</option>
                   <option value="Confirmed">Confirmed</option>
@@ -698,7 +698,7 @@ export default function ManageInspections() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.agent ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
                 {formErrors.agent && (
                   <p className="text-red-500 text-sm mt-1">
@@ -722,7 +722,7 @@ export default function ManageInspections() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.contact ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   placeholder="Email or phone number"
                 />
                 {formErrors.contact && (
@@ -745,7 +745,7 @@ export default function ManageInspections() {
                   value={formData.notes}
                   onChange={handleInputChange}
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -759,7 +759,7 @@ export default function ManageInspections() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Schedule Inspection
                 </button>
@@ -812,7 +812,7 @@ export default function ManageInspections() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.client ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
                 {formErrors.client && (
                   <p className="text-red-500 text-sm mt-1">
@@ -836,7 +836,7 @@ export default function ManageInspections() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.property ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
                 {formErrors.property && (
                   <p className="text-red-500 text-sm mt-1">
@@ -861,7 +861,7 @@ export default function ManageInspections() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.date ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.date && (
                     <p className="text-red-500 text-sm mt-1">
@@ -884,7 +884,7 @@ export default function ManageInspections() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.time ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.time && (
                     <p className="text-red-500 text-sm mt-1">
@@ -906,7 +906,7 @@ export default function ManageInspections() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="Scheduled">Scheduled</option>
                   <option value="Confirmed">Confirmed</option>
@@ -930,7 +930,7 @@ export default function ManageInspections() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.agent ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
                 {formErrors.agent && (
                   <p className="text-red-500 text-sm mt-1">
@@ -954,7 +954,7 @@ export default function ManageInspections() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.contact ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   placeholder="Email or phone number"
                 />
                 {formErrors.contact && (
@@ -977,7 +977,7 @@ export default function ManageInspections() {
                   value={formData.notes}
                   onChange={handleInputChange}
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -991,7 +991,7 @@ export default function ManageInspections() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Save Changes
                 </button>
@@ -1096,7 +1096,7 @@ export default function ManageInspections() {
 
             <div className="flex justify-end space-x-2 mt-6">
               <button
-                className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 onClick={() => {
                   closeModals();
                   openEditModal(currentInspection);

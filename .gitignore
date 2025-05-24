@@ -38,6 +38,19 @@ backend/node_modules/
 .vscode/
 .idea/
 
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.webm
+
+# Large image files (optional - uncomment if needed)
+# *.psd
+# *.ai
+
 # Misc
 .DS_Store
 Thumbs.db

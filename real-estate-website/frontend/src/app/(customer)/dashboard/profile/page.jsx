@@ -110,7 +110,7 @@ export default function Profile() {
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green"
+            className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-hover"
           >
             Edit Profile
           </button>
@@ -146,7 +146,7 @@ export default function Profile() {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -164,7 +164,7 @@ export default function Profile() {
                 value={formData.lastName}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function Profile() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -201,7 +201,7 @@ export default function Profile() {
               value={formData.phone}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -218,7 +218,7 @@ export default function Profile() {
               value={formData.address}
               onChange={handleChange}
               rows="3"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             ></textarea>
           </div>
 
@@ -226,7 +226,7 @@ export default function Profile() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green ${
+              className={`bg-primary text-white px-4 py-2 rounded hover:bg-primary-hover ${
                 isSubmitting ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >

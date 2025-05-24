@@ -95,7 +95,7 @@ export default function LandDetails({ params }) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </div>
     );
@@ -116,7 +116,7 @@ export default function LandDetails({ params }) {
       <div className="mb-6">
         <Link
           href="/lands/available"
-          className="text-primary-blue hover:text-accent-green"
+          className="text-primary hover:text-primary-text"
         >
           ← Back to Available Lands
         </Link>
@@ -153,7 +153,7 @@ export default function LandDetails({ params }) {
                 {land.features.map((feature, index) => (
                   <li key={index} className="flex items-center">
                     <svg
-                      className="w-5 h-5 text-accent-green mr-2"
+                      className="w-5 h-5 text-primary-text mr-2"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -188,11 +188,11 @@ export default function LandDetails({ params }) {
             </div>
 
             <div>
-              <div className="bg-light-blue p-6 rounded-lg">
+              <div className="bg-card-bg p-6 rounded-lg">
                 <h2 className="text-2xl font-bold mb-4">Property Summary</h2>
                 <div className="mb-4">
                   <p className="text-gray-600">Price</p>
-                  <p className="text-2xl font-bold text-primary-blue">
+                  <p className="text-2xl font-bold text-primary">
                     ${land.price.toLocaleString()}
                   </p>
                 </div>
@@ -208,7 +208,7 @@ export default function LandDetails({ params }) {
                 <div className="mt-6 space-y-4">
                   <Link
                     href={`/lands/purchase/${land.id}`}
-                    className="block w-full bg-accent-green text-white text-center py-3 rounded-lg hover:bg-green-600"
+                    className="block w-full bg-primary-text text-white text-center py-3 rounded-lg hover:bg-green-600"
                   >
                     Purchase Now
                   </Link>
@@ -249,14 +249,14 @@ export default function LandDetails({ params }) {
 
                   <Link
                     href="/book-inspection"
-                    className="block w-full bg-primary-blue text-white text-center py-3 rounded-lg hover:bg-accent-green"
+                    className="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-primary-hover"
                   >
                     Book Inspection
                   </Link>
 
                   <Link
                     href="/contact"
-                    className="block w-full bg-white text-primary-blue text-center py-3 rounded-lg border border-primary-blue hover:bg-light-blue"
+                    className="block w-full bg-white text-primary text-center py-3 rounded-lg border border-primary hover:bg-card-bg"
                   >
                     Contact Agent
                   </Link>

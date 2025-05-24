@@ -11,23 +11,23 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="bg-white py-8">
+    <footer className="bg-secondary py-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">Real Estate</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-bold mb-4 text-primary">Great Marcy</h3>
+            <p className="text-gray-300">
               Your trusted partner in finding the perfect land property for your
               needs.
             </p>
           </div>
           <div>
-            <h3 className="text-xl font-bold mb-4">Quick Links</h3>
+            <h3 className="text-xl font-bold mb-4 text-primary">Quick Links</h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/about"
-                  className="text-gray-600 hover:text-primary-blue"
+                  className="text-gray-300 hover:text-primary-hover"
                 >
                   About Us
                 </Link>
@@ -35,7 +35,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/lands/available"
-                  className="text-gray-600 hover:text-primary-blue"
+                  className="text-gray-300 hover:text-primary-hover"
                 >
                   Available Lands
                 </Link>
@@ -43,7 +43,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/contact"
-                  className="text-gray-600 hover:text-primary-blue"
+                  className="text-gray-300 hover:text-primary-hover"
                 >
                   Contact Us
                 </Link>
@@ -51,7 +51,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/book-inspection"
-                  className="text-gray-600 hover:text-primary-blue"
+                  className="text-gray-300 hover:text-primary-hover"
                 >
                   Book Inspection
                 </Link>
@@ -59,8 +59,8 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="text-xl font-bold mb-4">Contact</h3>
-            <address className="not-italic text-gray-600">
+            <h3 className="text-xl font-bold mb-4 text-primary">Contact</h3>
+            <address className="not-italic  text-gray-300">
               <p>123 Real Estate Street</p>
               <p>City, State 12345</p>
               <p>Email: info@realestate.com</p>

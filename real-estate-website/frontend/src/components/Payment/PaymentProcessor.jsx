@@ -180,7 +180,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
           </div>
           <button
             onClick={() => router.refresh()}
-            className="bg-primary-blue text-white px-6 py-3 rounded-lg hover:bg-accent-green"
+            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-hover"
           >
             Return to Property
           </button>
@@ -200,7 +200,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-semibold">Property</h3>
-          <span className="text-xl font-bold text-primary-blue">
+          <span className="text-xl font-bold text-primary">
             ${property.price?.toLocaleString()}
           </span>
         </div>
@@ -232,7 +232,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
             type="button"
             className={`p-4 border rounded-lg flex flex-col items-center ${
               paymentMethod === "creditCard"
-                ? "border-primary-blue bg-light-blue"
+                ? "border-primary bg-card-bg"
                 : "border-gray-300 hover:bg-gray-50"
             }`}
             onClick={() => setPaymentMethod("creditCard")}
@@ -258,7 +258,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
             type="button"
             className={`p-4 border rounded-lg flex flex-col items-center ${
               paymentMethod === "bankTransfer"
-                ? "border-primary-blue bg-light-blue"
+                ? "border-primary bg-card-bg"
                 : "border-gray-300 hover:bg-gray-50"
             }`}
             onClick={() => setPaymentMethod("bankTransfer")}
@@ -299,7 +299,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
                 value={cardDetails.cardNumber}
                 onChange={handleCardInputChange}
                 placeholder="1234 5678 9012 3456"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 maxLength={16}
               />
             </div>
@@ -318,7 +318,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
                 value={cardDetails.cardName}
                 onChange={handleCardInputChange}
                 placeholder="John Doe"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -337,7 +337,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
                   value={cardDetails.expiryDate}
                   onChange={handleCardInputChange}
                   placeholder="MM/YY"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
@@ -355,7 +355,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
                   value={cardDetails.cvv}
                   onChange={handleCardInputChange}
                   placeholder="123"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   maxLength={4}
                 />
               </div>
@@ -377,7 +377,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
                 value={bankDetails.accountName}
                 onChange={handleBankInputChange}
                 placeholder="John Doe"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -395,7 +395,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
                 value={bankDetails.accountNumber}
                 onChange={handleBankInputChange}
                 placeholder="12345678"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -413,7 +413,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
                 value={bankDetails.routingNumber}
                 onChange={handleBankInputChange}
                 placeholder="123456789"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -422,7 +422,7 @@ export default function PaymentProcessor({ property, onPaymentComplete }) {
         <button
           type="submit"
           disabled={isProcessing}
-          className={`w-full bg-primary-blue text-white py-3 px-4 rounded-md hover:bg-accent-green transition-colors ${
+          className={`w-full bg-primary text-white py-3 px-4 rounded-md hover:bg-primary-hover transition-colors ${
             isProcessing ? "opacity-70 cursor-not-allowed" : ""
           }`}
         >

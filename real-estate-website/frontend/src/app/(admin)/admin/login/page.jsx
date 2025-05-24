@@ -74,7 +74,7 @@ export default function AdminLogin() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="admin@example.com"
               />
             </div>
@@ -93,7 +93,7 @@ export default function AdminLogin() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="••••••••"
               />
             </div>
@@ -101,7 +101,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full bg-primary-blue text-white py-3 px-4 rounded-md hover:bg-accent-green transition-colors ${
+              className={`w-full bg-primary text-white py-3 px-4 rounded-md hover:bg-primary-hover transition-colors ${
                 isSubmitting ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
@@ -119,10 +119,7 @@ export default function AdminLogin() {
           </div>
 
           <div className="mt-4 text-center">
-            <Link
-              href="/"
-              className="text-primary-blue hover:text-accent-green"
-            >
+            <Link href="/" className="text-primary hover:text-primary-text">
               ← Back to Website
             </Link>
           </div>

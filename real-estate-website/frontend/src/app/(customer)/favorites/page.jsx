@@ -168,7 +168,7 @@ export default function Favorites() {
       <h1 className="text-3xl font-bold mb-8">My Favorite Properties</h1>
 
       {favorites.length === 0 ? (
-        <div className="bg-light-blue p-8 rounded-lg text-center">
+        <div className="bg-card-bg p-8 rounded-lg text-center">
           <h2 className="text-xl font-semibold mb-4">
             You haven't added any properties to your favorites yet.
           </h2>
@@ -178,7 +178,7 @@ export default function Favorites() {
           </p>
           <Link
             href="/lands/available"
-            className="bg-primary-blue text-white px-6 py-3 rounded-lg hover:bg-accent-green"
+            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-hover"
           >
             Browse Available Properties
           </Link>
@@ -240,12 +240,12 @@ export default function Favorites() {
                   <h3 className="text-xl font-semibold mb-2">{land.title}</h3>
                   <p className="text-gray-600 mb-4">{land.location}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-primary-blue font-bold">
+                    <span className="text-primary font-bold">
                       ${land.price?.toLocaleString() || "Price on request"}
                     </span>
                     <Link
                       href={`/lands/details/${land.id}`}
-                      className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green transition-colors duration-200"
+                      className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-hover transition-colors duration-200"
                     >
                       View Details
                     </Link>

@@ -240,7 +240,7 @@ export default function ManageUsers() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -250,7 +250,7 @@ export default function ManageUsers() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Users</h1>
         <button
-          className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
           onClick={openAddModal}
         >
           Add New User
@@ -330,7 +330,7 @@ export default function ManageUsers() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary-blue hover:text-accent-green mr-3"
+                      className="text-primary hover:text-primary-text mr-3"
                       onClick={() => openEditModal(user)}
                     >
                       Edit
@@ -390,7 +390,7 @@ export default function ManageUsers() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.name ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -412,7 +412,7 @@ export default function ManageUsers() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.email ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -435,7 +435,7 @@ export default function ManageUsers() {
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="User">User</option>
                   <option value="Admin">Admin</option>
@@ -454,7 +454,7 @@ export default function ManageUsers() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -471,7 +471,7 @@ export default function ManageUsers() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Add User
                 </button>
@@ -522,7 +522,7 @@ export default function ManageUsers() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.name ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -544,7 +544,7 @@ export default function ManageUsers() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.email ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -567,7 +567,7 @@ export default function ManageUsers() {
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="User">User</option>
                   <option value="Admin">Admin</option>
@@ -586,7 +586,7 @@ export default function ManageUsers() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -603,7 +603,7 @@ export default function ManageUsers() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Save Changes
                 </button>

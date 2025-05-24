@@ -284,7 +284,7 @@ export default function ManageHouses() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -294,7 +294,7 @@ export default function ManageHouses() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Houses</h1>
         <button
-          className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
           onClick={openAddModal}
         >
           Add New House
@@ -362,7 +362,7 @@ export default function ManageHouses() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <button
-                        className="hover:text-primary-blue focus:outline-none"
+                        className="hover:text-primary focus:outline-none"
                         onClick={() => openViewModal(property)}
                       >
                         {property.title}
@@ -399,7 +399,7 @@ export default function ManageHouses() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary-blue hover:text-accent-green mr-3"
+                      className="text-primary hover:text-primary-text mr-3"
                       onClick={() => openEditModal(property)}
                     >
                       Edit
@@ -459,7 +459,7 @@ export default function ManageHouses() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.title ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -483,7 +483,7 @@ export default function ManageHouses() {
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.price ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -508,7 +508,7 @@ export default function ManageHouses() {
                     name="bedrooms"
                     value={formData.bedrooms}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                       formErrors.bedrooms ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -533,7 +533,7 @@ export default function ManageHouses() {
                     value={formData.bathrooms}
                     onChange={handleInputChange}
                     step="0.5"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                       formErrors.bathrooms
                         ? "border-red-500"
                         : "border-gray-300"
@@ -560,7 +560,7 @@ export default function ManageHouses() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Available">Available</option>
                     <option value="Sold">Sold</option>
@@ -582,7 +582,7 @@ export default function ManageHouses() {
                     value={formData.area}
                     onChange={handleInputChange}
                     placeholder="e.g., 2000 sqft"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                       formErrors.area ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -607,7 +607,7 @@ export default function ManageHouses() {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -621,7 +621,7 @@ export default function ManageHouses() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Add House
                 </button>
@@ -672,7 +672,7 @@ export default function ManageHouses() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.title ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -696,7 +696,7 @@ export default function ManageHouses() {
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.price ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -721,7 +721,7 @@ export default function ManageHouses() {
                     name="bedrooms"
                     value={formData.bedrooms}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                       formErrors.bedrooms ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -746,7 +746,7 @@ export default function ManageHouses() {
                     value={formData.bathrooms}
                     onChange={handleInputChange}
                     step="0.5"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                       formErrors.bathrooms
                         ? "border-red-500"
                         : "border-gray-300"
@@ -773,7 +773,7 @@ export default function ManageHouses() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Available">Available</option>
                     <option value="Sold">Sold</option>
@@ -795,7 +795,7 @@ export default function ManageHouses() {
                     value={formData.area}
                     onChange={handleInputChange}
                     placeholder="e.g., 2000 sqft"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                       formErrors.area ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -820,7 +820,7 @@ export default function ManageHouses() {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -834,7 +834,7 @@ export default function ManageHouses() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Save Changes
                 </button>
@@ -957,7 +957,7 @@ export default function ManageHouses() {
 
                 <div className="mt-6 flex justify-end space-x-2">
                   <button
-                    className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                    className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                     onClick={() => {
                       closeModals();
                       openEditModal(currentProperty);

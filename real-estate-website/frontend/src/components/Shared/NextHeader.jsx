@@ -14,10 +14,10 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="bg-white shadow-md py-4">
+    <header className="bg-white shadow-md py-4 sticky top-0 z-50 text-neutral">
       <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-primary-blue">
-          Real Estate
+        <Link href="/" className="text-2xl font-bold text-primary">
+          Great Marcy
         </Link>
 
         {/* Mobile menu button */}
@@ -51,34 +51,37 @@ export default function Header() {
         </button>
 
         {/* Desktop navigation */}
-        <nav className="hidden md:flex space-x-6">
-          <Link href="/" className="hover:text-accent-green">
+        <nav className="hidden md:flex items-center space-x-6 text-neutral">
+          <Link href="/" className="hover:text-primary-text text-neutral font-bold">
             Home
           </Link>
-          <Link href="/about" className="hover:text-accent-green">
+          <Link href="/about" className="hover:text-primary-text text-neutral font-bold">
             About
           </Link>
-          <Link href="/portfolio" className="hover:text-accent-green">
+          <Link href="/portfolio" className="hover:text-primary-text text-neutral font-bold">
             Portfolio
           </Link>
-          <Link href="/why-us" className="hover:text-accent-green">
+          <Link href="/why-us" className="hover:text-primary-text text-neutral font-bold">
             Why Us
           </Link>
-          <Link href="/blog" className="hover:text-accent-green">
+          <Link href="/blog" className="hover:text-primary-text text-neutral font-bold">
             Blog
           </Link>
-          <Link href="/contact" className="hover:text-accent-green">
-            Contact
+          <Link
+            href="/contact"
+            className="bg-primary text-white px-4 py-2 rounded-full hover:opacity-70 hover:text-white transition-colors duration-300"
+          >
+            Contact Us
           </Link>
         </nav>
 
         {/* Desktop auth buttons */}
-        <div className="hidden md:flex space-x-4">
+        <div className="hidden md:flex space-x-4 items-center">
           {isLoggedIn ? (
             <>
               <Link
                 href="/favorites"
-                className="hover:text-accent-green flex items-center"
+                className="hover:text-primary-text flex items-center text-neutral font-bold"
               >
                 <svg
                   className="w-5 h-5 mr-1"
@@ -98,7 +101,7 @@ export default function Header() {
               </Link>
               <Link
                 href="/my-portfolio"
-                className="hover:text-accent-green flex items-center"
+                className="hover:text-primary-text flex items-center text-neutral font-bold"
               >
                 <svg
                   className="w-5 h-5 mr-1"
@@ -118,19 +121,19 @@ export default function Header() {
               </Link>
               <Link
                 href="/dashboard/profile"
-                className="hover:text-accent-green"
+                className="hover:text-primary-text text-neutral font-bold"
               >
                 Dashboard
               </Link>
             </>
           ) : (
             <>
-              <Link href="/auth/login" className="hover:text-accent-green">
+              <Link href="/auth/login" className="hover:text-primary-text border border-primary text-primary px-4 py-2 rounded hover:bg-primary-hover">
                 Login
               </Link>
               <Link
                 href="/auth/register"
-                className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green"
+                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-hover"
               >
                 Register
               </Link>
@@ -141,32 +144,35 @@ export default function Header() {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden mt-4 px-4 py-2 bg-white">
+        <div className="md:hidden mt-4 px-4 py-2 bg-white shadow-md">
           <nav className="flex flex-col space-y-3">
-            <Link href="/" className="hover:text-accent-green">
+            <Link href="/" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
               Home
             </Link>
-            <Link href="/about" className="hover:text-accent-green">
+            <Link href="/about" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
               About
             </Link>
-            <Link href="/portfolio" className="hover:text-accent-green">
+            <Link href="/portfolio" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
               Portfolio
             </Link>
-            <Link href="/why-us" className="hover:text-accent-green">
+            <Link href="/why-us" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
               Why Us
             </Link>
-            <Link href="/blog" className="hover:text-accent-green">
+            <Link href="/blog" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
               Blog
             </Link>
-            <Link href="/contact" className="hover:text-accent-green">
-              Contact
+            <Link
+              href="/contact"
+              className="text-primary  hover:underline"
+            >
+              Contact Us
             </Link>
             <div className="pt-3 border-t border-gray-200 flex flex-col space-y-3">
-              {isLoggedIn ? (
+              {!isLoggedIn ? (
                 <>
                   <Link
                     href="/favorites"
-                    className="hover:text-accent-green flex items-center"
+                    className="hover:text-primary-text flex items-center hover:underline"
                   >
                     <svg
                       className="w-5 h-5 mr-1"
@@ -186,7 +192,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/my-portfolio"
-                    className="hover:text-accent-green flex items-center"
+                    className="hover:text-primary-text flex items-center hover:underline"
                   >
                     <svg
                       className="w-5 h-5 mr-1"
@@ -206,19 +212,19 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/dashboard/profile"
-                    className="hover:text-accent-green"
+                    className="hover:text-primary-text hover:underline"
                   >
                     Dashboard
                   </Link>
                 </>
               ) : (
                 <>
-                  <Link href="/auth/login" className="hover:text-accent-green">
+                  <Link href="/auth/login" className=" hover:underline">
                     Login
                   </Link>
                   <Link
                     href="/auth/register"
-                    className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green text-center"
+                    className="hover:underline"
                   >
                     Register
                   </Link>

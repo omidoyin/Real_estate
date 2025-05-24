@@ -216,41 +216,38 @@ export default function ManageAnnouncements() {
     }
   };
 
-   const fetchAnnouncements = async () => {
-      try {
-        setLoading(true);
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
 
-        const response = await getAnnouncements();
+      const response = await getAnnouncements();
 
-        if (!response.success) {
-          throw new Error("Failed to fetch announcements");
-        }
-
-        const formattedAnnouncements = response.data.map((announcement) => ({
-          id: announcement._id,
-          title: announcement.title,
-          content: announcement.content,
-          status: announcement.status,
-          type: announcement.type,
-          startDate: new Date(announcement.startDate)
-            .toISOString()
-            .split("T")[0],
-          endDate: new Date(announcement.endDate).toISOString().split("T")[0],
-          date: new Date(announcement.createdAt).toISOString().split("T")[0],
-          author: "Admin",
-          target: announcement.target,
-        }));
-
-        console.log({formattedAnnouncements});
-        
-
-        // setAnnouncements(formattedAnnouncements);
-      } catch (error) {
-        console.error("Error fetching announcements:", error);
-      } finally {
-        setLoading(false);
+      if (!response.success) {
+        throw new Error("Failed to fetch announcements");
       }
-    };
+
+      const formattedAnnouncements = response.data.map((announcement) => ({
+        id: announcement._id,
+        title: announcement.title,
+        content: announcement.content,
+        status: announcement.status,
+        type: announcement.type,
+        startDate: new Date(announcement.startDate).toISOString().split("T")[0],
+        endDate: new Date(announcement.endDate).toISOString().split("T")[0],
+        date: new Date(announcement.createdAt).toISOString().split("T")[0],
+        author: "Admin",
+        target: announcement.target,
+      }));
+
+      console.log({ formattedAnnouncements });
+
+      // setAnnouncements(formattedAnnouncements);
+    } catch (error) {
+      console.error("Error fetching announcements:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Check if admin is authenticated
@@ -261,7 +258,6 @@ export default function ManageAnnouncements() {
     }
 
     // Fetch announcements data
-   
 
     fetchAnnouncements();
   }, [router]);
@@ -269,7 +265,7 @@ export default function ManageAnnouncements() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -279,7 +275,7 @@ export default function ManageAnnouncements() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Announcements</h1>
         <button
-          className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
           onClick={openAddModal}
         >
           Create Announcement
@@ -335,7 +331,7 @@ export default function ManageAnnouncements() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <button
-                        className="hover:text-primary-blue focus:outline-none"
+                        className="hover:text-primary focus:outline-none"
                         onClick={() => openViewModal(announcement)}
                       >
                         {announcement.title}
@@ -368,7 +364,7 @@ export default function ManageAnnouncements() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary-blue hover:text-accent-green mr-3"
+                      className="text-primary hover:text-primary-text mr-3"
                       onClick={() => openEditModal(announcement)}
                     >
                       Edit
@@ -438,7 +434,7 @@ export default function ManageAnnouncements() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.title ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -462,7 +458,7 @@ export default function ManageAnnouncements() {
                   value={formData.content}
                   onChange={handleInputChange}
                   rows="5"
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.content ? "border-red-500" : "border-gray-300"
                   }`}
                 ></textarea>
@@ -486,7 +482,7 @@ export default function ManageAnnouncements() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Scheduled">Scheduled</option>
                     <option value="Active">Active</option>
@@ -507,7 +503,7 @@ export default function ManageAnnouncements() {
                     name="author"
                     value={formData.author}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -522,7 +518,7 @@ export default function ManageAnnouncements() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Create Announcement
                 </button>
@@ -573,7 +569,7 @@ export default function ManageAnnouncements() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.title ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -597,7 +593,7 @@ export default function ManageAnnouncements() {
                   value={formData.content}
                   onChange={handleInputChange}
                   rows="5"
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.content ? "border-red-500" : "border-gray-300"
                   }`}
                 ></textarea>
@@ -621,7 +617,7 @@ export default function ManageAnnouncements() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Draft">Draft</option>
                     <option value="Published">Published</option>
@@ -641,7 +637,7 @@ export default function ManageAnnouncements() {
                     name="author"
                     value={formData.author}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -656,7 +652,7 @@ export default function ManageAnnouncements() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Save Changes
                 </button>
@@ -729,7 +725,7 @@ export default function ManageAnnouncements() {
                 </button>
               )}
               <button
-                className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 onClick={() => {
                   closeModals();
                   openEditModal(currentAnnouncement);

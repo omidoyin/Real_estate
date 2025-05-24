@@ -255,7 +255,7 @@ export default function Portfolio() {
 
     if (data.length === 0) {
       return (
-        <div className="bg-light-blue p-8 rounded-lg text-center">
+        <div className="bg-card-bg p-8 rounded-lg text-center">
           <h2 className="text-xl font-semibold mb-4">
             No items match your search criteria
           </h2>
@@ -319,7 +319,7 @@ export default function Portfolio() {
                   )}
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-primary-blue font-bold">
+                  <span className="text-primary font-bold">
                     {item.status === "for-rent" || item.status === "For Rent"
                       ? `$${item.rentPrice || item.price || 0}/${
                           item.rentPeriod || "month"
@@ -330,7 +330,7 @@ export default function Portfolio() {
                     href={`/${
                       serviceType === "apartments" ? "houses" : serviceType
                     }/details/${item.id}`}
-                    className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green transition-colors duration-200"
+                    className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-hover transition-colors duration-200"
                   >
                     View Details
                   </Link>
@@ -411,7 +411,7 @@ export default function Portfolio() {
                       ? "land-survey"
                       : "general-contracts"
                   }/${item.id}`}
-                  className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green transition-colors duration-200 inline-block"
+                  className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-hover transition-colors duration-200 inline-block"
                 >
                   View Details
                 </Link>
@@ -441,7 +441,7 @@ export default function Portfolio() {
             onClick={() => handleServiceChange("lands")}
             className={`px-4 py-2 rounded-md ${
               serviceType === "lands"
-                ? "bg-primary-blue text-white"
+                ? "bg-primary text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
           >
@@ -451,7 +451,7 @@ export default function Portfolio() {
             onClick={() => handleServiceChange("houses")}
             className={`px-4 py-2 rounded-md ${
               serviceType === "houses"
-                ? "bg-primary-blue text-white"
+                ? "bg-primary text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
           >
@@ -461,7 +461,7 @@ export default function Portfolio() {
             onClick={() => handleServiceChange("estateManagement")}
             className={`px-4 py-2 rounded-md ${
               serviceType === "estateManagement"
-                ? "bg-primary-blue text-white"
+                ? "bg-primary text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
           >
@@ -471,7 +471,7 @@ export default function Portfolio() {
             onClick={() => handleServiceChange("architecturalDesign")}
             className={`px-4 py-2 rounded-md ${
               serviceType === "architecturalDesign"
-                ? "bg-primary-blue text-white"
+                ? "bg-primary text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
           >
@@ -481,7 +481,7 @@ export default function Portfolio() {
             onClick={() => handleServiceChange("landSurvey")}
             className={`px-4 py-2 rounded-md ${
               serviceType === "landSurvey"
-                ? "bg-primary-blue text-white"
+                ? "bg-primary text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
           >
@@ -491,7 +491,7 @@ export default function Portfolio() {
             onClick={() => handleServiceChange("generalContracts")}
             className={`px-4 py-2 rounded-md ${
               serviceType === "generalContracts"
-                ? "bg-primary-blue text-white"
+                ? "bg-primary text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
           >
@@ -538,7 +538,7 @@ export default function Portfolio() {
                 setActiveFilters(defaultFilters);
                 handleFilterChange(defaultFilters);
               }}
-              className="text-primary-blue hover:underline"
+              className="text-primary hover:underline"
             >
               Clear all filters
             </button>
@@ -581,7 +581,7 @@ export default function Portfolio() {
                     onClick={() => handlePageChange(pageNumber)}
                     className={`px-4 py-2 border-t border-b border-r border-gray-300 ${
                       pageNumber === pagination.page
-                        ? "bg-primary-blue text-white"
+                        ? "bg-primary text-white"
                         : "bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                   >
@@ -635,7 +635,7 @@ export default function Portfolio() {
         </p>
         <Link
           href="/contact"
-          className="bg-primary-blue text-white px-6 py-3 rounded-lg text-lg hover:bg-accent-green"
+          className="bg-primary text-white px-6 py-3 rounded-lg text-lg hover:bg-primary-hover"
         >
           Contact Us
         </Link>

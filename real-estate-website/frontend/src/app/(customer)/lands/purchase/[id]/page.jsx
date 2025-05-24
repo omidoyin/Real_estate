@@ -78,7 +78,7 @@ export default function PurchaseLand({ params }) {
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-8">Purchase Property</h1>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </div>
     );
@@ -94,7 +94,7 @@ export default function PurchaseLand({ params }) {
         <div className="mt-6">
           <Link
             href="/lands/available"
-            className="text-primary-blue hover:underline"
+            className="text-primary hover:underline"
           >
             ← Back to Available Properties
           </Link>
@@ -110,7 +110,7 @@ export default function PurchaseLand({ params }) {
       <div className="mb-6">
         <Link
           href={`/lands/details/${land.id}`}
-          className="text-primary-blue hover:underline"
+          className="text-primary hover:underline"
         >
           ← Back to Property Details
         </Link>
@@ -139,7 +139,7 @@ export default function PurchaseLand({ params }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-600">Price</p>
-                  <p className="text-xl font-bold text-primary-blue">
+                  <p className="text-xl font-bold text-primary">
                     ${land.price.toLocaleString()}
                   </p>
                 </div>
@@ -205,7 +205,7 @@ export default function PurchaseLand({ params }) {
                 </p>
                 <Link
                   href="/my-portfolio"
-                  className="bg-primary-blue text-white px-6 py-3 rounded-lg hover:bg-accent-green"
+                  className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-hover"
                 >
                   View My Portfolio
                 </Link>

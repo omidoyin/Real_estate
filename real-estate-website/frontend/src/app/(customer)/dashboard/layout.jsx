@@ -58,7 +58,7 @@ export default function DashboardLayout({ children }) {
 
             {/* Mobile menu toggle */}
             <button
-              className="md:hidden w-full py-2 px-4 bg-primary-blue text-white rounded mb-4"
+              className="md:hidden w-full py-2 px-4 bg-primary text-white rounded mb-4"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? "Hide Menu" : "Show Menu"}
@@ -75,8 +75,8 @@ export default function DashboardLayout({ children }) {
                       href={item.path}
                       className={`block py-2 px-4 rounded ${
                         pathname === item.path
-                          ? "bg-primary-blue text-white"
-                          : "hover:bg-light-blue"
+                          ? "bg-primary text-white"
+                          : "hover:bg-card-bg"
                       }`}
                     >
                       {item.label}

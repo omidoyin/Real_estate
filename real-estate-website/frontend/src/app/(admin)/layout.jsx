@@ -188,7 +188,7 @@ export default function AdminLayout({ children }) {
                             href={child.path}
                             className={`flex items-center px-4 py-2 rounded text-sm ${
                               pathname === child.path
-                                ? "bg-primary-blue text-white"
+                                ? "bg-primary text-white"
                                 : "hover:bg-gray-700 text-gray-300"
                             }`}
                           >
@@ -203,7 +203,7 @@ export default function AdminLayout({ children }) {
                     href={item.path}
                     className={`flex items-center px-4 py-3 rounded ${
                       pathname === item.path
-                        ? "bg-primary-blue text-white"
+                        ? "bg-primary text-white"
                         : "hover:bg-gray-700"
                     }`}
                   >

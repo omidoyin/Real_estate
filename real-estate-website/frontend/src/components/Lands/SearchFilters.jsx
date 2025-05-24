@@ -76,7 +76,7 @@ export default function SearchFilters({ onFilterChange, initialFilters }) {
               value={filters.search}
               onChange={handleInputChange}
               placeholder="Search by title or location"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -92,7 +92,7 @@ export default function SearchFilters({ onFilterChange, initialFilters }) {
                 value={filters.priceRange[0]}
                 onChange={handlePriceRangeChange}
                 placeholder="Min"
-                className="w-1/2 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-1/2 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <input
                 type="number"
@@ -100,7 +100,7 @@ export default function SearchFilters({ onFilterChange, initialFilters }) {
                 value={filters.priceRange[1]}
                 onChange={handlePriceRangeChange}
                 placeholder="Max"
-                className="w-1/2 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-1/2 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function SearchFilters({ onFilterChange, initialFilters }) {
               name="size"
               value={filters.size}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="any">Any Size</option>
               <option value="small">Small (Under 300 sqm)</option>
@@ -141,7 +141,7 @@ export default function SearchFilters({ onFilterChange, initialFilters }) {
               name="location"
               value={filters.location}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="any">Any Location</option>
               <option value="City A">City A</option>
@@ -166,7 +166,7 @@ export default function SearchFilters({ onFilterChange, initialFilters }) {
               name="sortBy"
               value={filters.sortBy}
               onChange={handleInputChange}
-              className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+              className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="newest">Newest</option>
               <option value="priceAsc">Price: Low to High</option>
@@ -186,7 +186,7 @@ export default function SearchFilters({ onFilterChange, initialFilters }) {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-primary-blue text-white rounded-md hover:bg-accent-green"
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover"
             >
               Apply Filters
             </button>

@@ -89,7 +89,7 @@ export default function Register() {
                   value={formData.firstName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
@@ -107,7 +107,7 @@ export default function Register() {
                   value={formData.lastName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>
@@ -126,7 +126,7 @@ export default function Register() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -144,7 +144,7 @@ export default function Register() {
                 value={formData.phone}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -163,7 +163,7 @@ export default function Register() {
                 onChange={handleChange}
                 required
                 minLength="8"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -182,14 +182,14 @@ export default function Register() {
                 onChange={handleChange}
                 required
                 minLength="8"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full bg-primary-blue text-white py-2 px-4 rounded-md hover:bg-accent-green transition-colors ${
+              className={`w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-hover transition-colors ${
                 isSubmitting ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
@@ -202,7 +202,7 @@ export default function Register() {
               Already have an account?{" "}
               <Link
                 href="/auth/login"
-                className="text-primary-blue hover:text-accent-green"
+                className="text-primary hover:text-primary-text"
               >
                 Login
               </Link>

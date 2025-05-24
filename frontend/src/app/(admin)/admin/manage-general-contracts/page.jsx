@@ -247,7 +247,7 @@ export default function ManageGeneralContracts() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -257,7 +257,7 @@ export default function ManageGeneralContracts() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage General Contracts Services</h1>
         <button
-          className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
           onClick={openAddModal}
         >
           Add New Service
@@ -313,7 +313,7 @@ export default function ManageGeneralContracts() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <button
-                        className="hover:text-primary-blue focus:outline-none"
+                        className="hover:text-primary focus:outline-none"
                         onClick={() => openViewModal(service)}
                       >
                         {service.title}
@@ -334,7 +334,7 @@ export default function ManageGeneralContracts() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary-blue hover:text-accent-green mr-3"
+                      className="text-primary hover:text-primary-text mr-3"
                       onClick={() => openEditModal(service)}
                     >
                       Edit
@@ -375,7 +375,7 @@ export default function ManageGeneralContracts() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.title ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.title && (
                     <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>
@@ -393,7 +393,7 @@ export default function ManageGeneralContracts() {
                     name="contractType"
                     value={formData.contractType}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Residential">Residential</option>
                     <option value="Commercial">Commercial</option>
@@ -420,7 +420,7 @@ export default function ManageGeneralContracts() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.price ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                     placeholder="e.g. $150,000 - $500,000"
                   />
                   {formErrors.price && (
@@ -442,7 +442,7 @@ export default function ManageGeneralContracts() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.estimatedTimeline ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                     placeholder="e.g. 6-12 months"
                   />
                   {formErrors.estimatedTimeline && (
@@ -466,7 +466,7 @@ export default function ManageGeneralContracts() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.projectManager ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
                 {formErrors.projectManager && (
                   <p className="text-red-500 text-sm mt-1">{formErrors.projectManager}</p>
@@ -488,7 +488,7 @@ export default function ManageGeneralContracts() {
                   rows="3"
                   className={`w-full px-4 py-2 border ${
                     formErrors.description ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 ></textarea>
                 {formErrors.description && (
                   <p className="text-red-500 text-sm mt-1">{formErrors.description}</p>
@@ -508,7 +508,7 @@ export default function ManageGeneralContracts() {
                   value={formData.features}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Complete project management, Quality craftsmanship, Transparent pricing"
                 ></textarea>
               </div>
@@ -526,7 +526,7 @@ export default function ManageGeneralContracts() {
                   value={formData.services}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. New home construction, Home additions, Kitchen and bathroom remodeling"
                 ></textarea>
               </div>
@@ -541,7 +541,7 @@ export default function ManageGeneralContracts() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Add Service
                 </button>
@@ -573,7 +573,7 @@ export default function ManageGeneralContracts() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.title ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.title && (
                     <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>
@@ -591,7 +591,7 @@ export default function ManageGeneralContracts() {
                     name="contractType"
                     value={formData.contractType}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Residential">Residential</option>
                     <option value="Commercial">Commercial</option>
@@ -618,7 +618,7 @@ export default function ManageGeneralContracts() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.price ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.price && (
                     <p className="text-red-500 text-sm mt-1">{formErrors.price}</p>
@@ -639,7 +639,7 @@ export default function ManageGeneralContracts() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.estimatedTimeline ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.estimatedTimeline && (
                     <p className="text-red-500 text-sm mt-1">{formErrors.estimatedTimeline}</p>
@@ -662,7 +662,7 @@ export default function ManageGeneralContracts() {
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.projectManager ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
                 {formErrors.projectManager && (
                   <p className="text-red-500 text-sm mt-1">{formErrors.projectManager}</p>
@@ -684,7 +684,7 @@ export default function ManageGeneralContracts() {
                   rows="3"
                   className={`w-full px-4 py-2 border ${
                     formErrors.description ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 ></textarea>
                 {formErrors.description && (
                   <p className="text-red-500 text-sm mt-1">{formErrors.description}</p>
@@ -704,7 +704,7 @@ export default function ManageGeneralContracts() {
                   value={formData.features}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -721,7 +721,7 @@ export default function ManageGeneralContracts() {
                   value={formData.services}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -735,7 +735,7 @@ export default function ManageGeneralContracts() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Update Service
                 </button>
@@ -803,7 +803,7 @@ export default function ManageGeneralContracts() {
 
             <div className="flex justify-end space-x-2">
               <button
-                className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 onClick={() => {
                   closeModals();
                   openEditModal(currentService);

@@ -58,7 +58,7 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-primary-blue mr-4">
+            <div className="p-3 rounded-full bg-blue-100 text-primary mr-4">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -83,7 +83,7 @@ export default async function AdminDashboard() {
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-accent-green mr-4">
+            <div className="p-3 rounded-full bg-green-100 text-primary-text mr-4">
               <svg
                 className="w-8 h-8"
                 fill="none"

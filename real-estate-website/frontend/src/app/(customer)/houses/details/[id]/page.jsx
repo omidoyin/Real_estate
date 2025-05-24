@@ -91,7 +91,7 @@ export default function HouseDetails({ params }) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export default function HouseDetails({ params }) {
       <div className="mb-6">
         <Link
           href="/portfolio?service=houses"
-          className="text-primary-blue hover:text-accent-green"
+          className="text-primary hover:text-primary-text"
         >
           ← Back to Houses & Apartments
         </Link>
@@ -166,7 +166,7 @@ export default function HouseDetails({ params }) {
                 {house.features.map((feature, index) => (
                   <li key={index} className="flex items-center">
                     <svg
-                      className="w-5 h-5 text-accent-green mr-2"
+                      className="w-5 h-5 text-primary-text mr-2"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -186,7 +186,7 @@ export default function HouseDetails({ params }) {
                 {house.amenities.map((amenity, index) => (
                   <li key={index} className="flex items-center">
                     <svg
-                      className="w-5 h-5 text-accent-green mr-2"
+                      className="w-5 h-5 text-primary-text mr-2"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -206,7 +206,7 @@ export default function HouseDetails({ params }) {
                 {house.nearbyPlaces.map((place, index) => (
                   <li key={index} className="flex items-center">
                     <svg
-                      className="w-5 h-5 text-primary-blue mr-2"
+                      className="w-5 h-5 text-primary mr-2"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -223,13 +223,13 @@ export default function HouseDetails({ params }) {
             </div>
 
             <div>
-              <div className="bg-light-blue p-6 rounded-lg">
+              <div className="bg-card-bg p-6 rounded-lg">
                 <h2 className="text-2xl font-bold mb-4">Property Summary</h2>
                 <div className="mb-4">
                   <p className="text-gray-600">
                     {house.status === "for-rent" ? "Rent" : "Price"}
                   </p>
-                  <p className="text-2xl font-bold text-primary-blue">
+                  <p className="text-2xl font-bold text-primary">
                     ${house.price.toLocaleString()}
                     {house.status === "for-rent" && `/${house.rentPeriod}`}
                   </p>
@@ -263,14 +263,14 @@ export default function HouseDetails({ params }) {
                   {house.status === "for-rent" ? (
                     <Link
                       href={`/contact?property=${house.id}&type=rent`}
-                      className="block w-full bg-accent-green text-white text-center py-3 rounded-lg hover:bg-green-600"
+                      className="block w-full bg-primary-text text-white text-center py-3 rounded-lg hover:bg-green-600"
                     >
                       Inquire About Renting
                     </Link>
                   ) : (
                     <Link
                       href={`/houses/purchase/${house.id}`}
-                      className="block w-full bg-accent-green text-white text-center py-3 rounded-lg hover:bg-green-600"
+                      className="block w-full bg-primary-text text-white text-center py-3 rounded-lg hover:bg-green-600"
                     >
                       Purchase Now
                     </Link>
@@ -281,8 +281,8 @@ export default function HouseDetails({ params }) {
                     disabled={isAddingToFavorites}
                     className={`block w-full border text-center py-3 rounded-lg transition-colors duration-200 ${
                       isFavorite
-                        ? "bg-white border-primary-blue text-primary-blue hover:bg-light-blue"
-                        : "bg-primary-blue text-white hover:bg-blue-700"
+                        ? "bg-white border-primary text-primary hover:bg-card-bg"
+                        : "bg-primary text-white hover:bg-blue-700"
                     }`}
                   >
                     {isAddingToFavorites ? (
@@ -318,7 +318,7 @@ export default function HouseDetails({ params }) {
 
                   <Link
                     href="/contact"
-                    className="block w-full bg-white border border-primary-blue text-primary-blue text-center py-3 rounded-lg hover:bg-light-blue"
+                    className="block w-full bg-white border border-primary text-primary text-center py-3 rounded-lg hover:bg-card-bg"
                   >
                     Contact Agent
                   </Link>

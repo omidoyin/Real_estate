@@ -298,7 +298,7 @@ export default function ManageTeams() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -308,7 +308,7 @@ export default function ManageTeams() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Team</h1>
         <button
-          className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
           onClick={openAddModal}
         >
           Add Team Member
@@ -334,12 +334,12 @@ export default function ManageTeams() {
                 </div>
                 <div>
                   <h3
-                    className="text-lg font-semibold cursor-pointer hover:text-primary-blue"
+                    className="text-lg font-semibold cursor-pointer hover:text-primary"
                     onClick={() => openViewModal(member)}
                   >
                     {member.name}
                   </h3>
-                  <p className="text-primary-blue">{member.position}</p>
+                  <p className="text-primary">{member.position}</p>
                 </div>
               </div>
 
@@ -410,7 +410,7 @@ export default function ManageTeams() {
 
                 <div>
                   <button
-                    className="text-primary-blue hover:text-accent-green mr-2"
+                    className="text-primary hover:text-primary-text mr-2"
                     onClick={() => openEditModal(member)}
                   >
                     Edit
@@ -469,7 +469,7 @@ export default function ManageTeams() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.name ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -491,7 +491,7 @@ export default function ManageTeams() {
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.position ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -515,7 +515,7 @@ export default function ManageTeams() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.email ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -539,7 +539,7 @@ export default function ManageTeams() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.phone ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -562,7 +562,7 @@ export default function ManageTeams() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="Active">Active</option>
                   <option value="On Leave">On Leave</option>
@@ -583,7 +583,7 @@ export default function ManageTeams() {
                   value={formData.bio}
                   onChange={handleInputChange}
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -597,7 +597,7 @@ export default function ManageTeams() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Add Member
                 </button>
@@ -648,7 +648,7 @@ export default function ManageTeams() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.name ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -670,7 +670,7 @@ export default function ManageTeams() {
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.position ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -694,7 +694,7 @@ export default function ManageTeams() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.email ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -718,7 +718,7 @@ export default function ManageTeams() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.phone ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -741,7 +741,7 @@ export default function ManageTeams() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="Active">Active</option>
                   <option value="On Leave">On Leave</option>
@@ -762,7 +762,7 @@ export default function ManageTeams() {
                   value={formData.bio}
                   onChange={handleInputChange}
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -776,7 +776,7 @@ export default function ManageTeams() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Save Changes
                 </button>
@@ -825,7 +825,7 @@ export default function ManageTeams() {
                   <h3 className="text-xl font-semibold">
                     {currentMember.name}
                   </h3>
-                  <p className="text-primary-blue font-medium">
+                  <p className="text-primary font-medium">
                     {currentMember.position}
                   </p>
                   <span
@@ -916,7 +916,7 @@ export default function ManageTeams() {
 
                 <div className="flex justify-end space-x-2 mt-6">
                   <button
-                    className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                    className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                     onClick={() => {
                       closeModals();
                       openEditModal(currentMember);

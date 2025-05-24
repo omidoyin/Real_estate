@@ -243,7 +243,7 @@ export default function ManageLandSurvey() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -253,7 +253,7 @@ export default function ManageLandSurvey() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Land Survey Services</h1>
         <button
-          className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
           onClick={openAddModal}
         >
           Add New Service
@@ -309,7 +309,7 @@ export default function ManageLandSurvey() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <button
-                        className="hover:text-primary-blue focus:outline-none"
+                        className="hover:text-primary focus:outline-none"
                         onClick={() => openViewModal(service)}
                       >
                         {service.title}
@@ -330,7 +330,7 @@ export default function ManageLandSurvey() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary-blue hover:text-accent-green mr-3"
+                      className="text-primary hover:text-primary-text mr-3"
                       onClick={() => openEditModal(service)}
                     >
                       Edit
@@ -371,7 +371,7 @@ export default function ManageLandSurvey() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.title ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.title && (
                     <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>
@@ -389,7 +389,7 @@ export default function ManageLandSurvey() {
                     name="surveyType"
                     value={formData.surveyType}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Boundary">Boundary</option>
                     <option value="Topographic">Topographic</option>
@@ -416,7 +416,7 @@ export default function ManageLandSurvey() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.price ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                     placeholder="e.g. $800 - $1,200"
                   />
                   {formErrors.price && (
@@ -438,7 +438,7 @@ export default function ManageLandSurvey() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.typicalTimeframe ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                     placeholder="e.g. 1-2 weeks"
                   />
                   {formErrors.typicalTimeframe && (
@@ -462,7 +462,7 @@ export default function ManageLandSurvey() {
                   rows="3"
                   className={`w-full px-4 py-2 border ${
                     formErrors.description ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 ></textarea>
                 {formErrors.description && (
                   <p className="text-red-500 text-sm mt-1">{formErrors.description}</p>
@@ -482,7 +482,7 @@ export default function ManageLandSurvey() {
                   value={formData.features}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Accurate property boundary determination, Identification of encroachments"
                 ></textarea>
               </div>
@@ -500,7 +500,7 @@ export default function ManageLandSurvey() {
                   value={formData.process}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Initial consultation, Research of property records, Field work"
                 ></textarea>
               </div>
@@ -518,7 +518,7 @@ export default function ManageLandSurvey() {
                   value={formData.equipment}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. GPS receivers, Total stations, Laser scanners"
                 ></textarea>
               </div>
@@ -533,7 +533,7 @@ export default function ManageLandSurvey() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Add Service
                 </button>
@@ -565,7 +565,7 @@ export default function ManageLandSurvey() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.title ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.title && (
                     <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>
@@ -583,7 +583,7 @@ export default function ManageLandSurvey() {
                     name="surveyType"
                     value={formData.surveyType}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Boundary">Boundary</option>
                     <option value="Topographic">Topographic</option>
@@ -610,7 +610,7 @@ export default function ManageLandSurvey() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.price ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.price && (
                     <p className="text-red-500 text-sm mt-1">{formErrors.price}</p>
@@ -631,7 +631,7 @@ export default function ManageLandSurvey() {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2 border ${
                       formErrors.typicalTimeframe ? "border-red-500" : "border-gray-300"
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   {formErrors.typicalTimeframe && (
                     <p className="text-red-500 text-sm mt-1">{formErrors.typicalTimeframe}</p>
@@ -654,7 +654,7 @@ export default function ManageLandSurvey() {
                   rows="3"
                   className={`w-full px-4 py-2 border ${
                     formErrors.description ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
                 ></textarea>
                 {formErrors.description && (
                   <p className="text-red-500 text-sm mt-1">{formErrors.description}</p>
@@ -674,7 +674,7 @@ export default function ManageLandSurvey() {
                   value={formData.features}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -691,7 +691,7 @@ export default function ManageLandSurvey() {
                   value={formData.process}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -708,7 +708,7 @@ export default function ManageLandSurvey() {
                   value={formData.equipment}
                   onChange={handleInputChange}
                   rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -722,7 +722,7 @@ export default function ManageLandSurvey() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Update Service
                 </button>
@@ -793,7 +793,7 @@ export default function ManageLandSurvey() {
 
             <div className="flex justify-end space-x-2">
               <button
-                className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 onClick={() => {
                   closeModals();
                   openEditModal(currentService);

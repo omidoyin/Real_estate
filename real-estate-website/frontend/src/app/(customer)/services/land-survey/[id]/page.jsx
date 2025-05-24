@@ -97,7 +97,7 @@ export default function LandSurveyDetails({ params }) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </div>
     );
@@ -118,7 +118,7 @@ export default function LandSurveyDetails({ params }) {
       <div className="mb-6">
         <Link
           href="/portfolio?service=landSurvey"
-          className="text-primary-blue hover:text-accent-green"
+          className="text-primary hover:text-primary-text"
         >
           ← Back to Land Survey Services
         </Link>
@@ -174,7 +174,7 @@ export default function LandSurveyDetails({ params }) {
                 {service.features.map((feature, index) => (
                   <li key={index} className="flex items-center">
                     <svg
-                      className="w-5 h-5 text-accent-green mr-2"
+                      className="w-5 h-5 text-primary-text mr-2"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -203,7 +203,7 @@ export default function LandSurveyDetails({ params }) {
                 {service.equipment.map((item, index) => (
                   <li key={index} className="flex items-center">
                     <svg
-                      className="w-5 h-5 text-primary-blue mr-2"
+                      className="w-5 h-5 text-primary mr-2"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -220,7 +220,7 @@ export default function LandSurveyDetails({ params }) {
             </div>
 
             <div>
-              <div className="bg-light-blue p-6 rounded-lg">
+              <div className="bg-card-bg p-6 rounded-lg">
                 <h2 className="text-2xl font-bold mb-4">Service Summary</h2>
                 <div className="mb-4">
                   <p className="text-gray-600">Survey Type</p>
@@ -251,13 +251,13 @@ export default function LandSurveyDetails({ params }) {
                 <div className="mt-6 space-y-4">
                   <Link
                     href="/contact"
-                    className="block w-full bg-accent-green text-white text-center py-3 rounded-lg hover:bg-green-600"
+                    className="block w-full bg-primary-text text-white text-center py-3 rounded-lg hover:bg-green-600"
                   >
                     Request a Survey
                   </Link>
                   <Link
                     href={`tel:${service.contactPhone.replace(/\D/g, "")}`}
-                    className="block w-full bg-primary-blue text-white text-center py-3 rounded-lg hover:bg-blue-700"
+                    className="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-blue-700"
                   >
                     Call Us
                   </Link>

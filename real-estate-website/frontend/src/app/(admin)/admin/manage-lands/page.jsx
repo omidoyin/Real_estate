@@ -493,7 +493,7 @@ export default function ManageLands() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -503,7 +503,7 @@ export default function ManageLands() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Lands</h1>
         <button
-          className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
           onClick={openAddModal}
         >
           Add New Property
@@ -565,7 +565,7 @@ export default function ManageLands() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <button
-                        className="hover:text-primary-blue focus:outline-none"
+                        className="hover:text-primary focus:outline-none"
                         onClick={() => openViewModal(property)}
                       >
                         {property.title}
@@ -599,7 +599,7 @@ export default function ManageLands() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary-blue hover:text-accent-green mr-3"
+                      className="text-primary hover:text-primary-text mr-3"
                       onClick={() => openEditModal(property)}
                     >
                       Edit
@@ -666,7 +666,7 @@ export default function ManageLands() {
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                         formErrors.title ? "border-red-500" : "border-gray-300"
                       }`}
                     />
@@ -690,7 +690,7 @@ export default function ManageLands() {
                       name="price"
                       value={formData.price}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                         formErrors.price ? "border-red-500" : "border-gray-300"
                       }`}
                     />
@@ -714,7 +714,7 @@ export default function ManageLands() {
                         name="status"
                         value={formData.status}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option value="Available">Available</option>
                         <option value="Sold">Sold</option>
@@ -734,7 +734,7 @@ export default function ManageLands() {
                         name="type"
                         value={formData.type}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option value="Residential">Residential</option>
                         <option value="Commercial">Commercial</option>
@@ -758,7 +758,7 @@ export default function ManageLands() {
                       value={formData.area}
                       onChange={handleInputChange}
                       placeholder="e.g., 500 sqm"
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                         formErrors.area ? "border-red-500" : "border-gray-300"
                       }`}
                     />
@@ -782,7 +782,7 @@ export default function ManageLands() {
                       value={formData.description}
                       onChange={handleInputChange}
                       rows="4"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                     ></textarea>
                   </div>
                 </div>
@@ -803,7 +803,7 @@ export default function ManageLands() {
                           type="text"
                           value={feature}
                           onChange={(e) => handleFeatureInput(e, index)}
-                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                           placeholder="e.g., Swimming Pool"
                         />
                         <button
@@ -847,7 +847,7 @@ export default function ManageLands() {
                           type="text"
                           value={landmark}
                           onChange={(e) => handleLandmarkInput(e, index)}
-                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                           placeholder="e.g., Shopping Mall (2km)"
                         />
                         <button
@@ -1101,7 +1101,7 @@ export default function ManageLands() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Add Property
                 </button>
@@ -1159,7 +1159,7 @@ export default function ManageLands() {
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                         formErrors.title ? "border-red-500" : "border-gray-300"
                       }`}
                     />
@@ -1183,7 +1183,7 @@ export default function ManageLands() {
                       name="price"
                       value={formData.price}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                         formErrors.price ? "border-red-500" : "border-gray-300"
                       }`}
                     />
@@ -1207,7 +1207,7 @@ export default function ManageLands() {
                         name="status"
                         value={formData.status}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option value="Available">Available</option>
                         <option value="Sold">Sold</option>
@@ -1227,7 +1227,7 @@ export default function ManageLands() {
                         name="type"
                         value={formData.type}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option value="Residential">Residential</option>
                         <option value="Commercial">Commercial</option>
@@ -1251,7 +1251,7 @@ export default function ManageLands() {
                       value={formData.area}
                       onChange={handleInputChange}
                       placeholder="e.g., 500 sqm"
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                         formErrors.area ? "border-red-500" : "border-gray-300"
                       }`}
                     />
@@ -1275,7 +1275,7 @@ export default function ManageLands() {
                       value={formData.description}
                       onChange={handleInputChange}
                       rows="4"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                     ></textarea>
                   </div>
                 </div>
@@ -1296,7 +1296,7 @@ export default function ManageLands() {
                           type="text"
                           value={feature}
                           onChange={(e) => handleFeatureInput(e, index)}
-                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                           placeholder="e.g., Swimming Pool"
                         />
                         <button
@@ -1340,7 +1340,7 @@ export default function ManageLands() {
                           type="text"
                           value={landmark}
                           onChange={(e) => handleLandmarkInput(e, index)}
-                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                           placeholder="e.g., Shopping Mall (2km)"
                         />
                         <button
@@ -1596,7 +1596,7 @@ export default function ManageLands() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Save Changes
                 </button>
@@ -1833,7 +1833,7 @@ export default function ManageLands() {
 
                 <div className="mt-6 flex justify-end space-x-2">
                   <button
-                    className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                    className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                     onClick={() => {
                       closeModals();
                       openEditModal(currentProperty);

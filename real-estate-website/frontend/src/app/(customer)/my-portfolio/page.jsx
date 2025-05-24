@@ -143,7 +143,7 @@ export default function MyPortfolio() {
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-8">My Property Portfolio</h1>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </div>
     );
@@ -163,7 +163,7 @@ export default function MyPortfolio() {
       <h1 className="text-3xl font-bold mb-8">My Property Portfolio</h1>
 
       {properties.length === 0 ? (
-        <div className="bg-light-blue p-8 rounded-lg text-center">
+        <div className="bg-card-bg p-8 rounded-lg text-center">
           <h2 className="text-xl font-semibold mb-4">
             You don't have any properties in your portfolio yet.
           </h2>
@@ -173,7 +173,7 @@ export default function MyPortfolio() {
           </p>
           <Link
             href="/lands/available"
-            className="bg-primary-blue text-white px-6 py-3 rounded-lg hover:bg-accent-green"
+            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-hover"
           >
             Browse Available Properties
           </Link>
@@ -209,7 +209,7 @@ export default function MyPortfolio() {
                   ) : (
                     <div className="h-48 bg-gray-300"></div>
                   )}
-                  <div className="absolute top-2 left-2 bg-accent-green text-white px-3 py-1 rounded-full text-sm font-semibold">
+                  <div className="absolute top-2 left-2 bg-primary-text text-white px-3 py-1 rounded-full text-sm font-semibold">
                     Owned
                   </div>
                 </div>
@@ -249,13 +249,13 @@ export default function MyPortfolio() {
                   <div className="flex justify-between items-center">
                     <Link
                       href={`/lands/details/${property.id}`}
-                      className="text-primary-blue hover:underline"
+                      className="text-primary hover:underline"
                     >
                       View Details
                     </Link>
                     <Link
                       href={`/dashboard/payment-plan`}
-                      className="bg-primary-blue text-white px-4 py-2 rounded hover:bg-accent-green"
+                      className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-hover"
                     >
                       Payment Plan
                     </Link>
@@ -268,11 +268,11 @@ export default function MyPortfolio() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-semibold mb-4">Portfolio Summary</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-light-blue p-4 rounded-lg">
+              <div className="bg-card-bg p-4 rounded-lg">
                 <p className="text-gray-600">Total Properties</p>
                 <p className="text-2xl font-bold">{properties.length}</p>
               </div>
-              <div className="bg-light-blue p-4 rounded-lg">
+              <div className="bg-card-bg p-4 rounded-lg">
                 <p className="text-gray-600">Total Investment</p>
                 <p className="text-2xl font-bold">
                   $
@@ -285,7 +285,7 @@ export default function MyPortfolio() {
                     .toLocaleString()}
                 </p>
               </div>
-              <div className="bg-light-blue p-4 rounded-lg">
+              <div className="bg-card-bg p-4 rounded-lg">
                 <p className="text-gray-600">Fully Paid Properties</p>
                 <p className="text-2xl font-bold">
                   {

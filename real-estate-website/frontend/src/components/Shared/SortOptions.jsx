@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 export default function SortOptions({ onSortChange, options }) {
   const [sortBy, setSortBy] = useState(options[0].value);
@@ -20,7 +20,7 @@ export default function SortOptions({ onSortChange, options }) {
         id="sortBy"
         value={sortBy}
         onChange={handleSortChange}
-        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

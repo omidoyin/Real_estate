@@ -276,7 +276,7 @@ export default function ManagePayments() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -287,15 +287,15 @@ export default function ManagePayments() {
         <h1 className="text-2xl font-bold">Manage Payments</h1>
         <div>
           <button
-            className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green mr-2"
+            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover mr-2"
             onClick={openAddModal}
           >
             Add Payment
           </button>
-          <button className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green mr-2">
+          <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover mr-2">
             Export CSV
           </button>
-          <button className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green">
+          <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover">
             Generate Report
           </button>
         </div>
@@ -389,7 +389,7 @@ export default function ManagePayments() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary-blue hover:text-accent-green mr-3"
+                      className="text-primary hover:text-primary-text mr-3"
                       onClick={() => openViewModal(payment)}
                     >
                       View
@@ -451,7 +451,7 @@ export default function ManagePayments() {
                   name="user"
                   value={formData.user}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.user ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -473,7 +473,7 @@ export default function ManagePayments() {
                   name="property"
                   value={formData.property}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.property ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -497,7 +497,7 @@ export default function ManagePayments() {
                   name="amount"
                   value={formData.amount}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.amount ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -521,7 +521,7 @@ export default function ManagePayments() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Pending">Pending</option>
                     <option value="Completed">Completed</option>
@@ -541,7 +541,7 @@ export default function ManagePayments() {
                     name="method"
                     value={formData.method}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Credit Card">Credit Card</option>
                     <option value="Bank Transfer">Bank Transfer</option>
@@ -564,7 +564,7 @@ export default function ManagePayments() {
                   value={formData.notes}
                   onChange={handleInputChange}
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -578,7 +578,7 @@ export default function ManagePayments() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Add Payment
                 </button>
@@ -629,7 +629,7 @@ export default function ManagePayments() {
                   name="user"
                   value={formData.user}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.user ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -651,7 +651,7 @@ export default function ManagePayments() {
                   name="property"
                   value={formData.property}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.property ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -675,7 +675,7 @@ export default function ManagePayments() {
                   name="amount"
                   value={formData.amount}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue ${
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
                     formErrors.amount ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -699,7 +699,7 @@ export default function ManagePayments() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Pending">Pending</option>
                     <option value="Completed">Completed</option>
@@ -719,7 +719,7 @@ export default function ManagePayments() {
                     name="method"
                     value={formData.method}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Credit Card">Credit Card</option>
                     <option value="Bank Transfer">Bank Transfer</option>
@@ -742,7 +742,7 @@ export default function ManagePayments() {
                   value={formData.notes}
                   onChange={handleInputChange}
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 ></textarea>
               </div>
 
@@ -756,7 +756,7 @@ export default function ManagePayments() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 >
                   Save Changes
                 </button>
@@ -810,7 +810,7 @@ export default function ManagePayments() {
                   {currentPayment.status}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-primary-blue">
+              <p className="text-2xl font-bold text-primary">
                 ${currentPayment.amount.toLocaleString()}
               </p>
             </div>
@@ -864,7 +864,7 @@ export default function ManagePayments() {
                 </button>
               )}
               <button
-                className="bg-primary-blue text-white px-4 py-2 rounded-md hover:bg-accent-green"
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
                 onClick={() => {
                   closeModals();
                   openEditModal(currentPayment);
