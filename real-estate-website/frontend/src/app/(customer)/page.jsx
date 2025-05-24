@@ -334,12 +334,17 @@ export default async function Home() {
             <div className="bg-white p-4 rounded-3xl shadow-md">
               <div className="aspect-w-16 aspect-h-9  mb-4 rounded">
                 {/* Replace with actual video in production */}
-                <div className="flex items-center justify-center h-full">
-                  <video
-                    src="/vid2.mp4"
-                    controls
-                    className="w-full h-full rounded-3xl"
-                  ></video>
+                <div className="flex items-center justify-center h-64 bg-gray-200 rounded-3xl">
+                  <div className="text-center">
+                    <svg
+                      className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M8 5v10l7-5-7-5z" />
+                    </svg>
+                    <p className="text-gray-500">Video Coming Soon</p>
+                  </div>
                 </div>
               </div>
               <h3 className="text-xl font-semibold mb-2">
@@ -353,12 +358,17 @@ export default async function Home() {
             <div className="bg-white p-4  shadow-md rounded-3xl">
               <div className="aspect-w-16 aspect-h-9  mb-4 rounded">
                 {/* Replace with actual video in production */}
-                <div className="flex items-center justify-center h-full ">
-                  <video
-                    src="/vid1.mp4"
-                    controls
-                    className="w-full h-full rounded-3xl"
-                  ></video>
+                <div className="flex items-center justify-center h-64 bg-gray-200 rounded-3xl">
+                  <div className="text-center">
+                    <svg
+                      className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M8 5v10l7-5-7-5z" />
+                    </svg>
+                    <p className="text-gray-500">Video Coming Soon</p>
+                  </div>
                 </div>
               </div>
               <h3 className="text-xl font-semibold mb-2">
