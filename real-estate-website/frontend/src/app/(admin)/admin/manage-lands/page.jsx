@@ -1057,7 +1057,7 @@ export default function ManageLands() {
                     <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {formData.images.map((img, index) => (
                         <div key={index} className="relative group">
-                          <div className="aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden">
+                          <div className="aspect-video bg-gray-100 rounded-md overflow-hidden">
                             <img
                               src={img.preview}
                               alt={`Preview ${index}`}
@@ -1552,7 +1552,7 @@ export default function ManageLands() {
                     <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {formData.images.map((img, index) => (
                         <div key={index} className="relative group">
-                          <div className="aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden">
+                          <div className="aspect-video bg-gray-100 rounded-md overflow-hidden">
                             <img
                               src={img.preview || img.url}
                               alt={img.alt || `Property image ${index + 1}`}

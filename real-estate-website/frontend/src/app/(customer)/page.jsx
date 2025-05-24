@@ -334,17 +334,12 @@ export default async function Home() {
             <div className="bg-white p-4 rounded-3xl shadow-md">
               <div className="aspect-w-16 aspect-h-9  mb-4 rounded">
                 {/* Replace with actual video in production */}
-                <div className="flex items-center justify-center h-64 bg-gray-200 rounded-3xl">
-                  <div className="text-center">
-                    <svg
-                      className="w-16 h-16 mx-auto mb-4 text-gray-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M8 5v10l7-5-7-5z" />
-                    </svg>
-                    <p className="text-gray-500">Video Coming Soon</p>
-                  </div>
+                <div className="flex items-center justify-center h-full">
+                  <video
+                    src={"https://res.cloudinary.com/dp6pmwcqu/video/upload/v1748090417/vid2_mufx44.mp4"}
+                    controls
+                    className="w-full h-full rounded-3xl"
+                  ></video>
                 </div>
               </div>
               <h3 className="text-xl font-semibold mb-2">
@@ -358,17 +353,12 @@ export default async function Home() {
             <div className="bg-white p-4  shadow-md rounded-3xl">
               <div className="aspect-w-16 aspect-h-9  mb-4 rounded">
                 {/* Replace with actual video in production */}
-                <div className="flex items-center justify-center h-64 bg-gray-200 rounded-3xl">
-                  <div className="text-center">
-                    <svg
-                      className="w-16 h-16 mx-auto mb-4 text-gray-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M8 5v10l7-5-7-5z" />
-                    </svg>
-                    <p className="text-gray-500">Video Coming Soon</p>
-                  </div>
+                <div className="flex items-center justify-center h-full ">
+                  <video
+                    src={"https://res.cloudinary.com/dp6pmwcqu/video/upload/v1748090185/vid1_bho9nh.mp4"}
+                    controls
+                    className="w-full h-full rounded-3xl"
+                  ></video>
                 </div>
               </div>
               <h3 className="text-xl font-semibold mb-2">
@@ -446,7 +436,7 @@ export default async function Home() {
             Visit Our Office
           </h2>
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="aspect-w-16 aspect-h-9 bg-gray-200 mb-6 rounded">
+            <div className="aspect-video bg-gray-200 mb-6 rounded">
               {/* Leaflet Map container */}
               <div className="w-full h-96 rounded-lg overflow-hidden">
                 <LeafletMap />
