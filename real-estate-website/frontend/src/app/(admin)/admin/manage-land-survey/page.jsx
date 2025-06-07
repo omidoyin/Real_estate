@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getPropertyValuationServices,
+  addService,
+  editService,
+  deleteService,
+} from "../../../../utils/api";
 
 export default function ManageLandSurvey() {
   const [services, setServices] = useState([]);
@@ -34,60 +40,40 @@ export default function ManageLandSurvey() {
 
     const fetchServices = async () => {
       try {
-        // In a real app, this would be an API call
-        // For now, we'll use mock data
-        const mockServices = [
-          {
-            id: 1,
-            title: "Boundary Survey",
-            surveyType: "Boundary",
-            price: "$800 - $1,200",
-            description:
-              "Professional boundary survey to determine property lines and identify encroachments.",
-            features:
-              "Accurate property boundary determination, Identification of encroachments, Location of easements",
-            process:
-              "Initial consultation, Research of property records, Field work, Data processing, Report generation",
-            equipment: "GPS receivers, Total stations, Laser scanners",
-            typicalTimeframe: "1-2 weeks",
-            createdAt: "2023-01-05",
-          },
-          {
-            id: 2,
-            title: "Topographic Survey",
-            surveyType: "Topographic",
-            price: "$1,500 - $3,000",
-            description:
-              "Detailed topographic survey showing elevation changes, natural features, and man-made structures.",
-            features:
-              "Elevation contours, Natural features mapping, Structure locations, Utility locations",
-            process:
-              "Site assessment, Field measurements, Data collection, Contour mapping, Final deliverables",
-            equipment: "Drones, 3D scanners, GPS equipment, Advanced software",
-            typicalTimeframe: "2-3 weeks",
-            createdAt: "2023-02-10",
-          },
-          {
-            id: 3,
-            title: "ALTA/NSPS Land Title Survey",
-            surveyType: "ALTA/NSPS",
-            price: "$2,500 - $5,000",
-            description:
-              "Comprehensive survey meeting the requirements of the American Land Title Association and National Society of Professional Surveyors.",
-            features:
-              "Boundary determination, Improvement locations, Easement identification, Title commitment review",
-            process:
-              "Title review, Field survey, Data analysis, Drafting, Quality control, Certification",
-            equipment:
-              "High-precision GPS, Robotic total stations, Data collectors",
-            typicalTimeframe: "3-4 weeks",
-            createdAt: "2023-03-15",
-          },
-        ];
+        setLoading(true);
 
-        setServices(mockServices);
+        const response = await getPropertyValuationServices();
+
+        if (!response.success) {
+          throw new Error("Failed to fetch land survey services");
+        }
+
+        // Format the data to match the expected structure
+        const formattedServices = response.data.map((service) => ({
+          id: service._id || service.id,
+          title: service.title,
+          surveyType: service.propertyType || service.serviceType || "Boundary",
+          price: service.price,
+          description: service.description,
+          features: Array.isArray(service.features)
+            ? service.features.join(", ")
+            : service.features,
+          process: Array.isArray(service.benefits)
+            ? service.benefits.join(", ")
+            : service.benefits,
+          equipment: service.equipment || "Professional surveying equipment",
+          typicalTimeframe: service.duration || "1-2 weeks",
+          createdAt: service.createdAt,
+        }));
+
+        setServices(formattedServices);
       } catch (error) {
         console.error("Error fetching services:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to load services: " + error.message);
+        }
       } finally {
         setLoading(false);
       }
@@ -176,78 +162,174 @@ export default function ManageLandSurvey() {
   };
 
   // Handle add service
-  const handleAddService = (e) => {
+  const handleAddService = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newService = {
-      id: services.length + 1,
-      title: formData.title,
-      surveyType: formData.surveyType,
-      price: formData.price,
-      description: formData.description,
-      features: formData.features,
-      process: formData.process,
-      equipment: formData.equipment,
-      typicalTimeframe: formData.typicalTimeframe,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    try {
+      setLoading(true);
 
-    setServices([...services, newService]);
-    closeModals();
+      const serviceData = {
+        title: formData.title,
+        serviceType: "Property Valuation",
+        propertyType: formData.surveyType,
+        price: formData.price,
+        description: formData.description,
+        features: formData.features
+          .split(",")
+          .map((f) => f.trim())
+          .filter((f) => f),
+        benefits: formData.process
+          .split(",")
+          .map((b) => b.trim())
+          .filter((b) => b),
+        duration: formData.typicalTimeframe,
+        equipment: formData.equipment,
+        status: "Active",
+      };
 
-    // Show success message (in a real app)
-    alert("Land Survey service added successfully!");
+      const response = await addService(serviceData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to add service");
+      }
+
+      // Format the new service to match the expected structure
+      const newService = {
+        id: response.data._id || response.data.id,
+        title: response.data.title,
+        surveyType: response.data.propertyType || response.data.serviceType,
+        price: response.data.price,
+        description: response.data.description,
+        features: Array.isArray(response.data.features)
+          ? response.data.features.join(", ")
+          : response.data.features,
+        process: Array.isArray(response.data.benefits)
+          ? response.data.benefits.join(", ")
+          : response.data.benefits,
+        equipment: response.data.equipment,
+        typicalTimeframe: response.data.duration,
+        createdAt: response.data.createdAt,
+      };
+
+      setServices([...services, newService]);
+      closeModals();
+      setFormData({
+        title: "",
+        surveyType: "Boundary",
+        price: "",
+        description: "",
+        features: "",
+        process: "",
+        equipment: "",
+        typicalTimeframe: "",
+      });
+
+      alert("Land Survey service added successfully!");
+    } catch (error) {
+      console.error("Error adding service:", error);
+      alert("Failed to add service: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle edit service
-  const handleEditService = (e) => {
+  const handleEditService = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedServices = services.map((service) => {
-      if (service.id === currentService.id) {
-        return {
-          ...service,
-          title: formData.title,
-          surveyType: formData.surveyType,
-          price: formData.price,
-          description: formData.description,
-          features: formData.features,
-          process: formData.process,
-          equipment: formData.equipment,
-          typicalTimeframe: formData.typicalTimeframe,
-        };
+    try {
+      setLoading(true);
+
+      const serviceData = {
+        title: formData.title,
+        serviceType: "Property Valuation",
+        propertyType: formData.surveyType,
+        price: formData.price,
+        description: formData.description,
+        features: formData.features
+          .split(",")
+          .map((f) => f.trim())
+          .filter((f) => f),
+        benefits: formData.process
+          .split(",")
+          .map((b) => b.trim())
+          .filter((b) => b),
+        duration: formData.typicalTimeframe,
+        equipment: formData.equipment,
+      };
+
+      const response = await editService(currentService.id, serviceData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update service");
       }
-      return service;
-    });
 
-    setServices(updatedServices);
-    closeModals();
+      // Update the service in the state
+      const updatedServices = services.map((service) => {
+        if (service.id === currentService.id) {
+          return {
+            ...service,
+            title: response.data.title,
+            surveyType: response.data.propertyType || response.data.serviceType,
+            price: response.data.price,
+            description: response.data.description,
+            features: Array.isArray(response.data.features)
+              ? response.data.features.join(", ")
+              : response.data.features,
+            process: Array.isArray(response.data.benefits)
+              ? response.data.benefits.join(", ")
+              : response.data.benefits,
+            equipment: response.data.equipment,
+            typicalTimeframe: response.data.duration,
+          };
+        }
+        return service;
+      });
 
-    // Show success message (in a real app)
-    alert("Land Survey service updated successfully!");
+      setServices(updatedServices);
+      closeModals();
+
+      alert("Land Survey service updated successfully!");
+    } catch (error) {
+      console.error("Error updating service:", error);
+      alert("Failed to update service: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle delete service
-  const handleDeleteService = (id) => {
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedServices = services.filter((service) => service.id !== id);
-    setServices(updatedServices);
+  const handleDeleteService = async (id) => {
+    if (window.confirm("Are you sure you want to delete this service?")) {
+      try {
+        setLoading(true);
 
-    // Show success message (in a real app)
-    alert("Land Survey service deleted successfully!");
+        const response = await deleteService(id);
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to delete service");
+        }
+
+        // Remove the service from the state
+        const updatedServices = services.filter((service) => service.id !== id);
+        setServices(updatedServices);
+
+        alert("Land Survey service deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting service:", error);
+        alert("Failed to delete service: " + error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   if (loading) {

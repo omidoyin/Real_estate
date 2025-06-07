@@ -11,12 +11,12 @@ const {
   getUserPurchasedLands,
   searchLands,
   filterLands,
+  getCloudinarySignature,
 } = require("../controllers/landController");
 const {
   authMiddleware,
   adminMiddleware,
 } = require("../middlewares/authMiddleware");
-const { uploadMedia } = require("../utils/cloudinary");
 
 const router = express.Router();
 
@@ -24,17 +24,25 @@ const router = express.Router();
 router.get("/", getAvailableLands);
 router.get("/search", searchLands);
 router.get("/filter", filterLands);
-router.get("/:id", getLandDetails);
 
 // Protected routes - require authentication
 router.get("/favorites", authMiddleware, getUserFavoriteLands);
-router.post("/favorites/:id", authMiddleware, addLandToFavorites);
-router.delete("/favorites/:id", authMiddleware, removeLandFromFavorites);
 router.get("/my-lands", authMiddleware, getUserPurchasedLands);
 
 // Admin routes - require admin privileges
-router.post("/", authMiddleware, adminMiddleware, uploadMedia, addLand);
-router.put("/:id", authMiddleware, adminMiddleware, uploadMedia, editLand);
+router.get(
+  "/cloudinary-signature",
+  authMiddleware,
+  adminMiddleware,
+  getCloudinarySignature
+);
+router.post("/", authMiddleware, adminMiddleware, addLand);
+
+// Routes with ID parameters (must come after specific routes)
+router.get("/:id", getLandDetails);
+router.post("/favorites/:id", authMiddleware, addLandToFavorites);
+router.delete("/favorites/:id", authMiddleware, removeLandFromFavorites);
+router.put("/:id", authMiddleware, adminMiddleware, editLand);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteLand);
 
 module.exports = router;

@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getUsers,
+  addUser,
+  updateUser,
+  getUserDetails,
+  updateUserRole,
+  deleteUser,
+} from "../../../../utils/api";
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([]);
@@ -13,6 +21,7 @@ export default function ManageUsers() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    password: "",
     role: "User",
     status: "Active",
   });
@@ -86,71 +95,132 @@ export default function ManageUsers() {
   };
 
   // Handle add user
-  const handleAddUser = (e) => {
+  const handleAddUser = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newUser = {
-      id: users.length + 1,
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-      status: formData.status,
-      joinDate: new Date().toISOString().split("T")[0],
-    };
+    try {
+      setLoading(true);
 
-    setUsers([...users, newUser]);
-    closeModals();
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password || "defaultPassword123", // You might want to generate a random password
+        role: formData.role,
+        status: formData.status,
+      };
 
-    // Show success message (in a real app)
-    alert("User added successfully!");
+      const response = await addUser(userData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to add user");
+      }
+
+      // Format the new user to match the expected structure
+      const newUser = {
+        id: response.data._id || response.data.id,
+        name: response.data.name,
+        email: response.data.email,
+        role: response.data.role,
+        status: response.data.status || "Active",
+        joinDate: response.data.createdAt || new Date().toISOString(),
+      };
+
+      setUsers([...users, newUser]);
+      closeModals();
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "user",
+        status: "Active",
+      });
+
+      alert("User added successfully!");
+    } catch (error) {
+      console.error("Error adding user:", error);
+      alert("Failed to add user: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle edit user
-  const handleEditUser = (e) => {
+  const handleEditUser = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedUsers = users.map((user) => {
-      if (user.id === currentUser.id) {
-        return {
-          ...user,
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          status: formData.status,
-        };
+    try {
+      setLoading(true);
+
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        status: formData.status,
+      };
+
+      const response = await updateUser(currentUser.id, userData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update user");
       }
-      return user;
-    });
 
-    setUsers(updatedUsers);
-    closeModals();
+      // Update the user in the state
+      const updatedUsers = users.map((user) => {
+        if (user.id === currentUser.id) {
+          return {
+            ...user,
+            name: response.data.name,
+            email: response.data.email,
+            role: response.data.role,
+            status: response.data.status,
+          };
+        }
+        return user;
+      });
 
-    // Show success message (in a real app)
-    alert("User updated successfully!");
+      setUsers(updatedUsers);
+      closeModals();
+
+      alert("User updated successfully!");
+    } catch (error) {
+      console.error("Error updating user:", error);
+      alert("Failed to update user: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle delete user
-  const handleDeleteUser = (userId) => {
+  const handleDeleteUser = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedUsers = users.filter((user) => user.id !== userId);
-      setUsers(updatedUsers);
+      try {
+        setLoading(true);
 
-      // Show success message (in a real app)
-      alert("User deleted successfully!");
+        const response = await deleteUser(userId);
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to delete user");
+        }
+
+        // Remove the user from the state
+        const updatedUsers = users.filter((user) => user.id !== userId);
+        setUsers(updatedUsers);
+
+        alert("User deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        alert("Failed to delete user: " + error.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -167,68 +237,30 @@ export default function ManageUsers() {
       try {
         setLoading(true);
 
-        // In a real app, this would fetch from your API
-        // const response = await fetch('/api/admin/users', {
-        //   headers: {
-        //     'Authorization': `Bearer ${adminToken}`
-        //   }
-        // });
-        //
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch users');
-        // }
-        //
-        // const data = await response.json();
+        const response = await getUsers();
 
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (!response.success) {
+          throw new Error("Failed to fetch users");
+        }
 
-        const mockUsers = [
-          {
-            id: 1,
-            name: "John Doe",
-            email: "john@example.com",
-            role: "User",
-            status: "Active",
-            joinDate: "2023-01-15",
-          },
-          {
-            id: 2,
-            name: "Jane Smith",
-            email: "jane@example.com",
-            role: "User",
-            status: "Active",
-            joinDate: "2023-02-20",
-          },
-          {
-            id: 3,
-            name: "Robert Johnson",
-            email: "robert@example.com",
-            role: "User",
-            status: "Inactive",
-            joinDate: "2023-03-10",
-          },
-          {
-            id: 4,
-            name: "Emily Davis",
-            email: "emily@example.com",
-            role: "User",
-            status: "Active",
-            joinDate: "2023-04-05",
-          },
-          {
-            id: 5,
-            name: "Michael Wilson",
-            email: "michael@example.com",
-            role: "Admin",
-            status: "Active",
-            joinDate: "2023-01-01",
-          },
-        ];
+        // Format the data to match the expected structure
+        const formattedUsers = response.data.map((user) => ({
+          id: user._id || user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status || "Active", // Default to Active if not provided
+          joinDate: user.createdAt || user.joinDate,
+        }));
 
-        setUsers(mockUsers);
+        setUsers(formattedUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to load users: " + error.message);
+        }
       } finally {
         setLoading(false);
       }
@@ -419,6 +451,31 @@ export default function ManageUsers() {
                 {formErrors.email && (
                   <p className="text-red-500 text-xs mt-1">
                     {formErrors.email}
+                  </p>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label
+                  htmlFor="password"
+                  className="block text-gray-700 font-medium mb-2"
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                    formErrors.password ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Enter password for new user"
+                />
+                {formErrors.password && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {formErrors.password}
                   </p>
                 )}
               </div>

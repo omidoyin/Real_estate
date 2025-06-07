@@ -10,6 +10,7 @@ import SortOptions from "../../../components/Shared/SortOptions";
 import LoadingSpinner from "../../../components/Shared/LoadingSpinner";
 import ConfirmationDialog from "../../../components/Shared/ConfirmationDialog";
 import { useToast } from "../../../context/ToastContext";
+import { safeImageUrl } from "../../../utils/dataHelpers";
 
 export default function Favorites() {
   const [favorites, setFavorites] = useState([]);
@@ -204,19 +205,16 @@ export default function Favorites() {
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="relative h-48">
-                  {land.image ? (
-                    <Image
-                      src={land.image}
-                      alt={land.title}
-                      fill
-                      style={{ objectFit: "cover" }}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority={false}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="h-48 bg-gray-300"></div>
-                  )}
+                  <Image
+                    src={safeImageUrl(land.images || land.image, 0)}
+                    alt={land.title}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={false}
+                    loading="lazy"
+                    className="rounded-t-lg"
+                  />
                   <button
                     onClick={() => confirmRemoveFromFavorites(land)}
                     className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md hover:bg-red-100 transition-colors duration-200"

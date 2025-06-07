@@ -26,12 +26,18 @@ const upload = multer({ storage: storage });
 const uploadMedia = (req, res, next) => {
   upload.array("media", 10)(req, res, (err) => {
     if (err) {
+      console.error("Multer upload error:", err);
       return res.status(400).json({
         success: false,
         message: "Error uploading files",
         error: err.message,
       });
     }
+    console.log(
+      "Files uploaded successfully:",
+      req.files?.length || 0,
+      "files"
+    );
     next();
   });
 };

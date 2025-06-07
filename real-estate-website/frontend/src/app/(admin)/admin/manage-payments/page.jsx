@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getAllPayments,
+  addPayment,
+  updatePayment,
+  deletePayment,
+  markPaymentCompleted,
+} from "../../../../utils/api";
 
 export default function ManagePayments() {
   const [payments, setPayments] = useState([]);
@@ -104,84 +111,146 @@ export default function ManagePayments() {
   };
 
   // Handle add payment
-  const handleAddPayment = (e) => {
+  const handleAddPayment = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newPayment = {
-      id: payments.length + 1,
-      user: formData.user,
-      property: formData.property,
-      amount: Number(formData.amount),
-      status: formData.status,
-      method: formData.method,
-      notes: formData.notes,
-      date: new Date().toISOString().split("T")[0],
-    };
+    try {
+      setLoading(true);
 
-    setPayments([...payments, newPayment]);
-    closeModals();
+      const paymentData = {
+        userId: formData.userId, // This should be a user ID, not name
+        amount: Number(formData.amount),
+        method: formData.method,
+        propertyType: formData.propertyType || "Land", // Default to Land
+        propertyId: formData.propertyId, // This should be a property ID
+        status: formData.status,
+        notes: formData.notes,
+      };
 
-    // Show success message (in a real app)
-    alert("Payment added successfully!");
+      const response = await addPayment(paymentData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to add payment");
+      }
+
+      // Format the new payment to match the expected structure
+      const newPayment = {
+        id: response.data._id || response.data.id,
+        user: response.data.userId?.name || formData.user,
+        property: response.data.propertyId?.title || formData.property,
+        amount: response.data.amount,
+        status: response.data.status,
+        date: response.data.paymentDate || response.data.createdAt,
+        method: response.data.method,
+        notes: response.data.notes,
+      };
+
+      setPayments([...payments, newPayment]);
+      closeModals();
+      setFormData({
+        user: "",
+        property: "",
+        amount: "",
+        status: "Pending",
+        method: "Credit Card",
+        notes: "",
+      });
+
+      alert("Payment added successfully!");
+    } catch (error) {
+      console.error("Error adding payment:", error);
+      alert("Failed to add payment: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle edit payment
-  const handleEditPayment = (e) => {
+  const handleEditPayment = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedPayments = payments.map((payment) => {
-      if (payment.id === currentPayment.id) {
-        return {
-          ...payment,
-          user: formData.user,
-          property: formData.property,
-          amount: Number(formData.amount),
-          status: formData.status,
-          method: formData.method,
-          notes: formData.notes,
-        };
+    try {
+      setLoading(true);
+
+      const paymentData = {
+        amount: Number(formData.amount),
+        method: formData.method,
+        status: formData.status,
+        notes: formData.notes,
+      };
+
+      const response = await updatePayment(currentPayment.id, paymentData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update payment");
       }
-      return payment;
-    });
 
-    setPayments(updatedPayments);
-    closeModals();
-
-    // Show success message (in a real app)
-    alert("Payment updated successfully!");
-  };
-
-  // Handle approve payment
-  const handleApprovePayment = (paymentId) => {
-    if (window.confirm("Are you sure you want to approve this payment?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
+      // Update the payment in the state
       const updatedPayments = payments.map((payment) => {
-        if (payment.id === paymentId) {
+        if (payment.id === currentPayment.id) {
           return {
             ...payment,
-            status: "Completed",
+            amount: response.data.amount,
+            status: response.data.status,
+            method: response.data.method,
+            notes: response.data.notes,
           };
         }
         return payment;
       });
 
       setPayments(updatedPayments);
+      closeModals();
 
-      // Show success message (in a real app)
-      alert("Payment approved successfully!");
+      alert("Payment updated successfully!");
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      alert("Failed to update payment: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle approve payment
+  const handleApprovePayment = async (paymentId) => {
+    if (window.confirm("Are you sure you want to approve this payment?")) {
+      try {
+        setLoading(true);
+
+        const response = await markPaymentCompleted(paymentId);
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to approve payment");
+        }
+
+        // Update the payment status in the state
+        const updatedPayments = payments.map((payment) => {
+          if (payment.id === paymentId) {
+            return {
+              ...payment,
+              status: "Completed",
+            };
+          }
+          return payment;
+        });
+
+        setPayments(updatedPayments);
+
+        alert("Payment approved successfully!");
+      } catch (error) {
+        console.error("Error approving payment:", error);
+        alert("Failed to approve payment: " + error.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -198,73 +267,32 @@ export default function ManagePayments() {
       try {
         setLoading(true);
 
-        // In a real app, this would fetch from your API
-        // const response = await fetch('/api/admin/payments', {
-        //   headers: {
-        //     'Authorization': `Bearer ${adminToken}`
-        //   }
-        // });
-        //
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch payments');
-        // }
-        //
-        // const data = await response.json();
+        const response = await getAllPayments();
 
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (!response.success) {
+          throw new Error("Failed to fetch payments");
+        }
 
-        const mockPayments = [
-          {
-            id: 1,
-            user: "John Doe",
-            property: "Premium Land in Location A",
-            amount: 25000,
-            status: "Completed",
-            date: "2023-04-15",
-            method: "Credit Card",
-          },
-          {
-            id: 2,
-            user: "Jane Smith",
-            property: "Exclusive Land in Location B",
-            amount: 35000,
-            status: "Pending",
-            date: "2023-04-20",
-            method: "Bank Transfer",
-          },
-          {
-            id: 3,
-            user: "Robert Johnson",
-            property: "Strategic Land in Location C",
-            amount: 18000,
-            status: "Completed",
-            date: "2023-04-10",
-            method: "Credit Card",
-          },
-          {
-            id: 4,
-            user: "Emily Davis",
-            property: "Residential Land in Location D",
-            amount: 22000,
-            status: "Failed",
-            date: "2023-04-05",
-            method: "PayPal",
-          },
-          {
-            id: 5,
-            user: "Michael Wilson",
-            property: "Commercial Land in Location E",
-            amount: 40000,
-            status: "Completed",
-            date: "2023-04-01",
-            method: "Bank Transfer",
-          },
-        ];
+        // Format the data to match the expected structure
+        const formattedPayments = response.data.map((payment) => ({
+          id: payment._id || payment.id,
+          user: payment.userId?.name || "Unknown User",
+          property: payment.propertyId?.title || "Unknown Property",
+          amount: payment.amount,
+          status: payment.status,
+          date: payment.paymentDate || payment.createdAt,
+          method: payment.method,
+          notes: payment.notes,
+        }));
 
-        setPayments(mockPayments);
+        setPayments(formattedPayments);
       } catch (error) {
         console.error("Error fetching payments:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to load payments: " + error.message);
+        }
       } finally {
         setLoading(false);
       }

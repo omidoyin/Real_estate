@@ -1,6 +1,10 @@
+// Load environment variables FIRST before any other imports
+const dotenv = require("dotenv");
+const path = require("path");
+dotenv.config({ path: path.join(__dirname, "../.env") });
+
 const express = require("express");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const landRoutes = require("./routes/landRoutes");
@@ -12,8 +16,6 @@ const adminRoutes = require("./routes/adminRoutes");
 const portfolioRoutes = require("./routes/portfolioRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
 const errorHandler = require("./middlewares/errorHandler");
-
-dotenv.config();
 
 const app = express();
 

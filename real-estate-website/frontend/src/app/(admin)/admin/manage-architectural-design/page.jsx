@@ -3,6 +3,19 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getArchitecturalDesignServices,
+  getAdminServices,
+  addService,
+  editService,
+  deleteService,
+} from "../../../../utils/api";
+import {
+  getAdminServices,
+  addAdminService,
+  editAdminService,
+  deleteAdminService,
+} from "../../../../utils/api";
 
 export default function ManageArchitecturalDesign() {
   const [services, setServices] = useState([]);
@@ -22,6 +35,48 @@ export default function ManageArchitecturalDesign() {
   const [formErrors, setFormErrors] = useState({});
   const router = useRouter();
 
+  // Fetch services function
+  const fetchServices = async () => {
+    try {
+      const response = await getAdminServices();
+
+      if (!response.success) {
+        throw new Error("Failed to fetch services");
+      }
+
+      // Filter for architectural design services and format the data
+      const architecturalServices = response.data
+        .filter(
+          (service) =>
+            service.category === "Architectural Design" ||
+            service.type === "Architectural Design" ||
+            service.title.toLowerCase().includes("design") ||
+            service.title.toLowerCase().includes("architectural")
+        )
+        .map((service) => ({
+          id: service._id || service.id,
+          title: service.title,
+          designType: service.designType || service.type || "Residential",
+          price: service.price || "Contact for pricing",
+          description: service.description,
+          features: service.features || "",
+          process: service.process || "",
+          createdAt: service.createdAt,
+        }));
+
+      setServices(architecturalServices);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to load services: " + error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch services on component mount
   useEffect(() => {
     const token = Cookies.get("adminToken");
@@ -30,61 +85,9 @@ export default function ManageArchitecturalDesign() {
       return;
     }
 
-    const fetchServices = async () => {
-      try {
-        // In a real app, this would be an API call
-        // For now, we'll use mock data
-        const mockServices = [
-          {
-            id: 1,
-            title: "Modern Home Design",
-            designType: "Residential",
-            price: "$5,000 - $10,000",
-            description:
-              "Contemporary home design services with focus on open spaces, natural light, and sustainable materials.",
-            features:
-              "Custom floor plans, 3D visualization, Interior design integration, Sustainable design elements",
-            process:
-              "Initial consultation, Concept development, Design refinement, Construction documentation",
-            createdAt: "2023-01-10",
-          },
-          {
-            id: 2,
-            title: "Commercial Office Design",
-            designType: "Commercial",
-            price: "$15,000 - $30,000",
-            description:
-              "Professional office space design focusing on productivity, brand identity, and employee well-being.",
-            features:
-              "Space planning, Lighting design, Acoustic solutions, Brand integration",
-            process:
-              "Site analysis, Programming, Schematic design, Design development, Construction documents",
-            createdAt: "2023-02-15",
-          },
-          {
-            id: 3,
-            title: "Renovation Design",
-            designType: "Renovation",
-            price: "$3,000 - $8,000",
-            description:
-              "Comprehensive renovation design services to transform existing spaces into functional and beautiful environments.",
-            features:
-              "As-built documentation, Space reconfiguration, Material selection, Construction coordination",
-            process:
-              "Existing conditions assessment, Design goals, Concept development, Construction documentation",
-            createdAt: "2023-03-20",
-          },
-        ];
-
-        setServices(mockServices);
-      } catch (error) {
-        console.error("Error fetching services:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchServices();
+    fetchServices().catch((error) => {
+      console.error("Error in useEffect fetchServices:", error);
+    });
   }, [router]);
 
   // Validate form
@@ -159,74 +162,105 @@ export default function ManageArchitecturalDesign() {
   };
 
   // Handle add service
-  const handleAddService = (e) => {
+  const handleAddService = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newService = {
-      id: services.length + 1,
-      title: formData.title,
-      designType: formData.designType,
-      price: formData.price,
-      description: formData.description,
-      features: formData.features,
-      process: formData.process,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    try {
+      const serviceData = {
+        title: formData.title,
+        category: "Architectural Design",
+        type: formData.designType,
+        price: formData.price,
+        description: formData.description,
+        features: formData.features,
+        process: formData.process,
+      };
 
-    setServices([...services, newService]);
-    closeModals();
+      const response = await addService(serviceData);
 
-    // Show success message (in a real app)
-    alert("Architectural Design service added successfully!");
+      if (response.success) {
+        // Refresh the services list
+        await fetchServices();
+        closeModals();
+        alert("Architectural Design service added successfully!");
+      } else {
+        throw new Error(response.message || "Failed to add service");
+      }
+    } catch (error) {
+      console.error("Error adding service:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to add service: " + error.message);
+      }
+    }
   };
 
   // Handle edit service
-  const handleEditService = (e) => {
+  const handleEditService = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedServices = services.map((service) => {
-      if (service.id === currentService.id) {
-        return {
-          ...service,
-          title: formData.title,
-          designType: formData.designType,
-          price: formData.price,
-          description: formData.description,
-          features: formData.features,
-          process: formData.process,
-        };
+    try {
+      const serviceData = {
+        title: formData.title,
+        category: "Architectural Design",
+        type: formData.designType,
+        price: formData.price,
+        description: formData.description,
+        features: formData.features,
+        process: formData.process,
+      };
+
+      const response = await editService(currentService.id, serviceData);
+
+      if (response.success) {
+        // Refresh the services list
+        await fetchServices();
+        closeModals();
+        alert("Architectural Design service updated successfully!");
+      } else {
+        throw new Error(response.message || "Failed to update service");
       }
-      return service;
-    });
-
-    setServices(updatedServices);
-    closeModals();
-
-    // Show success message (in a real app)
-    alert("Architectural Design service updated successfully!");
+    } catch (error) {
+      console.error("Error updating service:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to update service: " + error.message);
+      }
+    }
   };
 
   // Handle delete service
-  const handleDeleteService = (id) => {
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedServices = services.filter((service) => service.id !== id);
-    setServices(updatedServices);
+  const handleDeleteService = async (id) => {
+    if (window.confirm("Are you sure you want to delete this service?")) {
+      try {
+        const response = await deleteService(id);
 
-    // Show success message (in a real app)
-    alert("Architectural Design service deleted successfully!");
+        if (response.success) {
+          // Refresh the services list
+          await fetchServices();
+          alert("Architectural Design service deleted successfully!");
+        } else {
+          throw new Error(response.message || "Failed to delete service");
+        }
+      } catch (error) {
+        console.error("Error deleting service:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to delete service: " + error.message);
+        }
+      }
+    }
   };
 
   if (loading) {

@@ -423,6 +423,111 @@ const updateUserRole = async (req, res) => {
 };
 
 /**
+ * Add a new user
+ * @route POST /api/admin/users
+ * @access Private/Admin
+ */
+const addUser = async (req, res) => {
+  try {
+    const { name, email, password, role, status } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists",
+      });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new user
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role: role || "user",
+      status: status || "Active",
+    });
+
+    await newUser.save();
+
+    // Remove password from response
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
+
+    res.status(201).json({
+      success: true,
+      data: userResponse,
+      message: "User created successfully",
+    });
+  } catch (error) {
+    console.error("Error adding user:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding user",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Update user details
+ * @route PUT /api/admin/users/:userId
+ * @access Private/Admin
+ */
+const updateUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const { name, email, role, status } = req.body;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if email is being changed and if it already exists
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "User with this email already exists",
+        });
+      }
+    }
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name, email, role, status },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    res.status(200).json({
+      success: true,
+      data: updatedUser,
+      message: "User updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating user",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Delete user
  * @route DELETE /api/admin/users/:userId
  * @access Private/Admin
@@ -964,6 +1069,8 @@ module.exports = {
   getAdminDashboardData,
   getAdminStats,
   getUsers,
+  addUser,
+  updateUser,
   getUserDetails,
   updateUserRole,
   deleteUser,

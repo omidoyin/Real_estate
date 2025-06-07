@@ -7,6 +7,7 @@ import { getMyLands } from "../../../utils/api";
 import { isAuthenticated } from "../../../utils/auth";
 import { useRouter } from "next/navigation";
 import SortOptions from "../../../components/Shared/SortOptions";
+import { safeImageUrl } from "../../../utils/dataHelpers";
 
 export default function MyPortfolio() {
   const [properties, setProperties] = useState([]);
@@ -199,16 +200,13 @@ export default function MyPortfolio() {
                 className="bg-white rounded-lg shadow-md overflow-hidden"
               >
                 <div className="relative h-48">
-                  {property.image ? (
-                    <Image
-                      src={property.image}
-                      alt={property.title}
-                      fill
-                      style={{ objectFit: "cover" }}
-                    />
-                  ) : (
-                    <div className="h-48 bg-gray-300"></div>
-                  )}
+                  <Image
+                    src={safeImageUrl(property.images || property.image, 0)}
+                    alt={property.title}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    className="rounded-t-lg"
+                  />
                   <div className="absolute top-2 left-2 bg-primary-text text-white px-3 py-1 rounded-full text-sm font-semibold">
                     Owned
                   </div>

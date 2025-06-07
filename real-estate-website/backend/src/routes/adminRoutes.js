@@ -3,6 +3,8 @@ const {
   getAdminStats,
   adminLogin,
   getUsers,
+  addUser,
+  updateUser,
   getUserDetails,
   updateUserRole,
   deleteUser,
@@ -20,6 +22,7 @@ const {
   updateInspection,
   deleteInspection,
 } = require("../controllers/adminController");
+const { getAllLands } = require("../controllers/landController");
 const {
   authMiddleware,
   adminMiddleware,
@@ -42,7 +45,9 @@ router.get("/stats", authMiddleware, adminMiddleware, getAdminStats);
 
 // User management
 router.get("/users", authMiddleware, adminMiddleware, getUsers);
+router.post("/users", authMiddleware, adminMiddleware, addUser);
 router.get("/users/:userId", authMiddleware, adminMiddleware, getUserDetails);
+router.put("/users/:userId", authMiddleware, adminMiddleware, updateUser);
 router.put(
   "/users/:userId/role",
   authMiddleware,
@@ -100,5 +105,8 @@ router.delete(
   adminMiddleware,
   deleteInspection
 );
+
+// Land management
+router.get("/lands", authMiddleware, adminMiddleware, getAllLands);
 
 module.exports = router;

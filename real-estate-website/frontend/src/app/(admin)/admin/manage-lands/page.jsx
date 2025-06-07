@@ -4,6 +4,17 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import Image from "next/image";
+import { addLand, editLand, getLands, deleteLand } from "@/utils/api";
+import {
+  uploadImages,
+  uploadVideo,
+  uploadBrochure,
+  uploadDocuments,
+  validateImages,
+  validateVideo,
+  validateBrochure,
+  validateDocuments,
+} from "@/utils/cloudinaryUpload";
 
 export default function ManageLands() {
   const [properties, setProperties] = useState([]);
@@ -12,6 +23,11 @@ export default function ManageLands() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [currentProperty, setCurrentProperty] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({
+    current: 0,
+    total: 0,
+  });
   const [formData, setFormData] = useState({
     title: "",
     price: "",
@@ -32,6 +48,31 @@ export default function ManageLands() {
   const documentInputRef = useRef(null);
   const [formErrors, setFormErrors] = useState({});
   const router = useRouter();
+
+  // Fetch properties data
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+      const response = await getLands();
+
+      if (response && response.success) {
+        setProperties(response.data || []);
+      } else {
+        throw new Error(response?.message || "Failed to fetch lands");
+      }
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to fetch lands: " + error.message);
+      }
+      // Set empty array on error to prevent further issues
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -129,35 +170,58 @@ export default function ManageLands() {
 
   // Handle image input
   const handleImageInput = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
+    try {
+      if (e.target.files && e.target.files.length > 0) {
+        const newFiles = Array.from(e.target.files);
 
-      // Create preview URLs for the images
-      const newImages = newFiles.map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-      }));
+        // Validate file types
+        const validFiles = newFiles.filter((file) => {
+          const isValidType = file.type.startsWith("image/");
+          if (!isValidType) {
+            console.warn(`Skipping invalid file type: ${file.type}`);
+          }
+          return isValidType;
+        });
 
-      setFormData({
-        ...formData,
-        images: [...formData.images, ...newImages],
-      });
+        if (validFiles.length === 0) {
+          alert("Please select valid image files.");
+          return;
+        }
+
+        // Create preview URLs for the images
+        const newImages = validFiles.map((file) => ({
+          file,
+          preview: URL.createObjectURL(file),
+        }));
+
+        setFormData({
+          ...formData,
+          images: [...formData.images, ...newImages],
+        });
+      }
+    } catch (error) {
+      console.error("Error handling image input:", error);
+      alert("Error processing selected images. Please try again.");
     }
   };
 
   // Remove image
   const removeImage = (index) => {
-    // Revoke the object URL to avoid memory leaks
-    if (formData.images[index].preview) {
-      URL.revokeObjectURL(formData.images[index].preview);
-    }
+    try {
+      // Revoke the object URL to avoid memory leaks
+      if (formData.images[index] && formData.images[index].preview) {
+        URL.revokeObjectURL(formData.images[index].preview);
+      }
 
-    const newImages = [...formData.images];
-    newImages.splice(index, 1);
-    setFormData({
-      ...formData,
-      images: newImages,
-    });
+      const newImages = [...formData.images];
+      newImages.splice(index, 1);
+      setFormData({
+        ...formData,
+        images: newImages,
+      });
+    } catch (error) {
+      console.error("Error removing image:", error);
+    }
   };
 
   // Handle brochure input
@@ -186,7 +250,7 @@ export default function ManageLands() {
   const validateForm = () => {
     const errors = {};
 
-    if (!formData.title.trim()) {
+    if (!formData.title || !formData.title.trim()) {
       errors.title = "Title is required";
     }
 
@@ -196,7 +260,7 @@ export default function ManageLands() {
       errors.price = "Price must be a positive number";
     }
 
-    if (!formData.area.trim()) {
+    if (!formData.area || !formData.area.trim()) {
       errors.area = "Area is required";
     }
 
@@ -225,19 +289,47 @@ export default function ManageLands() {
 
   // Open edit modal
   const openEditModal = (property) => {
+    console.log("Opening edit modal for property:", property);
     setCurrentProperty(property);
+
+    // Format images properly for the form
+    const formattedImages = (property.images || [])
+      .map((image, index) => {
+        if (typeof image === "string") {
+          // If image is a URL string
+          return {
+            url: image,
+            preview: image,
+            alt: `Property image ${index + 1}`,
+          };
+        } else if (image && typeof image === "object") {
+          // If image is already an object
+          return {
+            url: image.url || image.preview || image,
+            preview: image.preview || image.url || image,
+            alt: image.alt || `Property image ${index + 1}`,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean); // Remove any null values
+
+    console.log("Formatted images for edit:", formattedImages);
+
     setFormData({
-      title: property.title,
-      price: property.price,
-      status: property.status,
-      type: property.type,
-      area: property.area,
+      title: property.title || "",
+      price: property.price || "",
+      status: property.status || "Available",
+      type: property.type || "Residential",
+      area: property.size || property.area || "", // Backend uses 'size', frontend uses 'area'
       description: property.description || "",
       features: property.features || [],
-      landmarks: property.landmarks || [],
+      landmarks: (property.landmarks || []).map((landmark) =>
+        typeof landmark === "string" ? landmark : landmark.name || ""
+      ), // Convert objects to strings for editing
       documents: property.documents || [],
-      images: property.images || [],
-      brochure: property.brochure || null,
+      images: formattedImages,
+      brochure: property.brochureUrl || null,
     });
     setFormErrors({});
     setIsEditModalOpen(true);
@@ -257,148 +349,309 @@ export default function ManageLands() {
   };
 
   // Handle add property
-  const handleAddProperty = (e) => {
+  const handleAddProperty = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call with FormData to handle file uploads
-    // For demo purposes, just add to the state
+    setUploading(true);
+    setUploadProgress({ current: 0, total: 0 });
 
-    // Process images for the demo (in a real app, you'd upload these to a server)
-    const processedImages = formData.images.map((img) => ({
-      url: img.preview,
-      alt: "Property image",
-    }));
+    try {
+      // Extract files for upload
+      const imageFiles = formData.images.map((img) => img.file).filter(Boolean);
+      const brochureFile = formData.brochure?.file;
+      const documentFiles = formData.documents.filter(
+        (doc) => doc instanceof File
+      );
 
-    // Process documents for the demo
-    const processedDocuments = formData.documents.map((doc) => ({
-      name: doc.name,
-      type: doc.type,
-      size: doc.size,
-    }));
-
-    // Process brochure for the demo
-    const processedBrochure = formData.brochure
-      ? {
-          name: formData.brochure.name,
-          type: formData.brochure.file.type,
-          size: formData.brochure.file.size,
+      // Validate files before upload
+      if (imageFiles.length > 0) {
+        const imageErrors = validateImages(imageFiles);
+        if (imageErrors.length > 0) {
+          alert("Image validation errors:\n" + imageErrors.join("\n"));
+          return;
         }
-      : null;
+      }
 
-    const newProperty = {
-      id: properties.length + 1,
-      title: formData.title,
-      price: Number(formData.price),
-      status: formData.status,
-      type: formData.type,
-      area: formData.area,
-      description: formData.description,
-      features: formData.features,
-      landmarks: formData.landmarks,
-      documents: processedDocuments,
-      images: processedImages,
-      brochure: processedBrochure,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+      if (brochureFile) {
+        const brochureErrors = validateBrochure(brochureFile);
+        if (brochureErrors.length > 0) {
+          alert("Brochure validation errors:\n" + brochureErrors.join("\n"));
+          return;
+        }
+      }
 
-    setProperties([...properties, newProperty]);
-    closeModals();
+      if (documentFiles.length > 0) {
+        const documentErrors = validateDocuments(documentFiles);
+        if (documentErrors.length > 0) {
+          alert("Document validation errors:\n" + documentErrors.join("\n"));
+          return;
+        }
+      }
 
-    // Show success message (in a real app)
-    alert("Property added successfully!");
+      // Calculate total files to upload
+      const totalFiles =
+        imageFiles.length + (brochureFile ? 1 : 0) + documentFiles.length;
+      setUploadProgress({ current: 0, total: totalFiles });
+
+      // Upload images to Cloudinary
+      let imageUrls = [];
+      if (imageFiles.length > 0) {
+        imageUrls = await uploadImages(imageFiles, (current, total) => {
+          setUploadProgress({ current, total: totalFiles });
+        });
+      }
+
+      // Upload documents to Cloudinary
+      let documentUrls = [];
+      if (documentFiles.length > 0) {
+        documentUrls = await uploadDocuments(
+          documentFiles,
+          (current, total) => {
+            setUploadProgress((prev) => ({
+              ...prev,
+              current: prev.current + current,
+            }));
+          }
+        );
+      }
+
+      // Upload brochure to Cloudinary
+      let brochureUrl = "";
+      if (brochureFile) {
+        brochureUrl = await uploadBrochure(brochureFile, () => {
+          setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
+        });
+      }
+
+      // Prepare land data for API
+      const landData = {
+        title: formData.title,
+        location: formData.area, // Using area as location for now
+        price: Number(formData.price),
+        size: formData.area,
+        type: formData.type,
+        description: formData.description,
+        features: formData.features.filter((f) => f.trim() !== ""), // Filter empty features
+        landmarks: formData.landmarks
+          .filter((l) => l.trim() !== "") // Filter empty landmarks
+          .map((landmark) => ({
+            name: landmark,
+            distance: "", // Default empty distance
+          })),
+        documents: documentUrls, // Cloudinary URLs with names
+        images: imageUrls, // Cloudinary URLs
+        video: null, // No video field in current form
+        brochureUrl: brochureUrl, // Cloudinary URL
+      };
+
+      console.log("Land data being sent:", landData);
+
+      const response = await addLand(landData);
+
+      if (response.success) {
+        // Refresh the properties list
+        await fetchProperties();
+        closeModals();
+        alert("Land added successfully!");
+      } else {
+        throw new Error(response.message || "Failed to add land");
+      }
+    } catch (error) {
+      console.error("Error adding land:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to add land: " + error.message);
+      }
+    } finally {
+      setUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
+    }
   };
 
   // Handle edit property
-  const handleEditProperty = (e) => {
+  const handleEditProperty = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // Process images for the demo (in a real app, you'd upload these to a server)
-    const processedImages = formData.images.map((img) => {
-      // If it's a new image (has a file property), use the preview URL
-      if (img.file) {
-        return {
-          url: img.preview,
-          alt: "Property image",
-        };
-      }
-      // If it's an existing image, just return it as is
-      return img;
-    });
+    setUploading(true);
+    setUploadProgress({ current: 0, total: 0 });
 
-    // Process documents for the demo
-    const processedDocuments = formData.documents.map((doc) => {
-      // If it's a new document (has a File object properties), process it
-      if (doc instanceof File) {
-        return {
-          name: doc.name,
-          type: doc.type,
-          size: doc.size,
-        };
-      }
-      // If it's an existing document, just return it as is
-      return doc;
-    });
+    try {
+      // Extract new files for upload (only files that are File objects, not URLs)
+      const newImageFiles = formData.images
+        .filter((img) => img.file && img.file instanceof File)
+        .map((img) => img.file);
+      const newBrochureFile =
+        formData.brochure?.file instanceof File ? formData.brochure.file : null;
+      const newDocumentFiles = formData.documents.filter(
+        (doc) => doc instanceof File
+      );
 
-    // Process brochure for the demo
-    const processedBrochure = formData.brochure
-      ? formData.brochure.file
-        ? {
-            name: formData.brochure.name,
-            type: formData.brochure.file.type,
-            size: formData.brochure.file.size,
+      // Get existing URLs (strings)
+      const existingImageUrls = formData.images
+        .filter(
+          (img) =>
+            typeof img === "string" ||
+            (img && typeof img.preview === "string" && !img.file)
+        )
+        .map((img) => (typeof img === "string" ? img : img.preview));
+
+      // Get existing document URLs (objects with name and url)
+      const existingDocumentUrls = formData.documents.filter(
+        (doc) =>
+          typeof doc === "object" &&
+          doc.url &&
+          doc.name &&
+          !(doc instanceof File)
+      );
+
+      // Validate new files before upload
+      if (newImageFiles.length > 0) {
+        const imageErrors = validateImages(newImageFiles);
+        if (imageErrors.length > 0) {
+          alert("Image validation errors:\n" + imageErrors.join("\n"));
+          return;
+        }
+      }
+
+      if (newBrochureFile) {
+        const brochureErrors = validateBrochure(newBrochureFile);
+        if (brochureErrors.length > 0) {
+          alert("Brochure validation errors:\n" + brochureErrors.join("\n"));
+          return;
+        }
+      }
+
+      if (newDocumentFiles.length > 0) {
+        const documentErrors = validateDocuments(newDocumentFiles);
+        if (documentErrors.length > 0) {
+          alert("Document validation errors:\n" + documentErrors.join("\n"));
+          return;
+        }
+      }
+
+      // Calculate total files to upload
+      const totalFiles =
+        newImageFiles.length +
+        (newBrochureFile ? 1 : 0) +
+        newDocumentFiles.length;
+      setUploadProgress({ current: 0, total: totalFiles });
+
+      // Upload new images to Cloudinary
+      let newImageUrls = [];
+      if (newImageFiles.length > 0) {
+        newImageUrls = await uploadImages(newImageFiles, (current, total) => {
+          setUploadProgress({ current, total: totalFiles });
+        });
+      }
+
+      // Upload new documents to Cloudinary
+      let newDocumentUrls = [];
+      if (newDocumentFiles.length > 0) {
+        newDocumentUrls = await uploadDocuments(
+          newDocumentFiles,
+          (current, total) => {
+            setUploadProgress((prev) => ({
+              ...prev,
+              current: prev.current + current,
+            }));
           }
-        : formData.brochure
-      : null;
-
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedProperties = properties.map((property) => {
-      if (property.id === currentProperty.id) {
-        return {
-          ...property,
-          title: formData.title,
-          price: Number(formData.price),
-          status: formData.status,
-          type: formData.type,
-          area: formData.area,
-          description: formData.description,
-          features: formData.features,
-          landmarks: formData.landmarks,
-          documents: processedDocuments,
-          images: processedImages,
-          brochure: processedBrochure,
-        };
+        );
       }
-      return property;
-    });
 
-    setProperties(updatedProperties);
-    closeModals();
+      // Upload new brochure to Cloudinary
+      let newBrochureUrl = "";
+      if (newBrochureFile) {
+        newBrochureUrl = await uploadBrochure(newBrochureFile, () => {
+          setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
+        });
+      }
 
-    // Show success message (in a real app)
-    alert("Property updated successfully!");
+      // Combine existing and new URLs
+      const allImageUrls = [...existingImageUrls, ...newImageUrls];
+      const allDocumentUrls = [...existingDocumentUrls, ...newDocumentUrls];
+
+      // Use new brochure URL if uploaded, otherwise keep existing
+      const brochureUrl =
+        newBrochureUrl ||
+        (typeof formData.brochure === "string" ? formData.brochure : "");
+
+      // Prepare land data for API
+      const landData = {
+        title: formData.title,
+        location: formData.area, // Using area as location for now
+        price: Number(formData.price),
+        size: formData.area,
+        type: formData.type,
+        description: formData.description,
+        features: formData.features.filter((f) => f.trim() !== ""), // Filter empty features
+        landmarks: formData.landmarks
+          .filter((l) => l.trim() !== "") // Filter empty landmarks
+          .map((landmark) => ({
+            name: landmark,
+            distance: "", // Default empty distance
+          })),
+        documents: allDocumentUrls, // Combined existing and new document URLs
+        images: allImageUrls, // Combined URLs
+        video: null, // No video field in current form
+        brochureUrl: brochureUrl, // Cloudinary URL
+      };
+
+      const response = await editLand(
+        currentProperty._id || currentProperty.id,
+        landData
+      );
+
+      if (response.success) {
+        // Refresh the properties list
+        await fetchProperties();
+        closeModals();
+        alert("Land updated successfully!");
+      } else {
+        throw new Error(response.message || "Failed to update land");
+      }
+    } catch (error) {
+      console.error("Error updating land:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to update land: " + error.message);
+      }
+    } finally {
+      setUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
+    }
   };
 
   // Handle delete property
-  const handleDeleteProperty = (propertyId) => {
+  const handleDeleteProperty = async (propertyId) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedProperties = properties.filter(
-        (property) => property.id !== propertyId
-      );
-      setProperties(updatedProperties);
+      try {
+        const response = await deleteLand(propertyId);
 
-      // Show success message (in a real app)
-      alert("Property deleted successfully!");
+        if (response.success) {
+          // Refresh the properties list
+          await fetchProperties();
+          alert("Land deleted successfully!");
+        } else {
+          throw new Error(response.message || "Failed to delete land");
+        }
+      } catch (error) {
+        console.error("Error deleting land:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to delete land: " + error.message);
+        }
+      }
     }
   };
 
@@ -410,84 +663,10 @@ export default function ManageLands() {
       return;
     }
 
-    // Fetch properties data
-    const fetchProperties = async () => {
-      try {
-        setLoading(true);
-
-        // In a real app, this would fetch from your API
-        // const response = await fetch('/api/admin/properties', {
-        //   headers: {
-        //     'Authorization': `Bearer ${adminToken}`
-        //   }
-        // });
-        //
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch properties');
-        // }
-        //
-        // const data = await response.json();
-
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const mockProperties = [
-          {
-            id: 1,
-            title: "Premium Land in Location A",
-            price: 250000,
-            status: "Available",
-            type: "Residential",
-            area: "500 sqm",
-            createdAt: "2023-01-15",
-          },
-          {
-            id: 2,
-            title: "Exclusive Land in Location B",
-            price: 350000,
-            status: "Sold",
-            type: "Commercial",
-            area: "750 sqm",
-            createdAt: "2023-02-20",
-          },
-          {
-            id: 3,
-            title: "Strategic Land in Location C",
-            price: 180000,
-            status: "Available",
-            type: "Residential",
-            area: "450 sqm",
-            createdAt: "2023-03-10",
-          },
-          {
-            id: 4,
-            title: "Residential Land in Location D",
-            price: 220000,
-            status: "Available",
-            type: "Residential",
-            area: "520 sqm",
-            createdAt: "2023-04-05",
-          },
-          {
-            id: 5,
-            title: "Commercial Land in Location E",
-            price: 400000,
-            status: "Sold",
-            type: "Commercial",
-            area: "900 sqm",
-            createdAt: "2023-01-01",
-          },
-        ];
-
-        setProperties(mockProperties);
-      } catch (error) {
-        console.error("Error fetching properties:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProperties();
+    // Call fetchProperties with error handling
+    fetchProperties().catch((error) => {
+      console.error("Error in useEffect fetchProperties:", error);
+    });
   }, [router]);
 
   if (loading) {
@@ -589,17 +768,17 @@ export default function ManageLands() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {property.type}
+                    {property.type || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {property.area}
+                    {property.size || property.area || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(property.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary hover:text-primary-text mr-3"
+                      className="text-primary-text hover:text-primary-text mr-3"
                       onClick={() => openEditModal(property)}
                     >
                       Edit
@@ -1091,19 +1270,50 @@ export default function ManageLands() {
                 </div>
               </div>
 
+              {/* Upload Progress */}
+              {uploading && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-700">
+                      Uploading files...
+                    </span>
+                    <span className="text-sm text-blue-600">
+                      {uploadProgress.current} / {uploadProgress.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width:
+                          uploadProgress.total > 0
+                            ? `${
+                                (uploadProgress.current /
+                                  uploadProgress.total) *
+                                100
+                              }%`
+                            : "0%",
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end mt-6">
                 <button
                   type="button"
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 mr-2"
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={closeModals}
+                  disabled={uploading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={uploading}
                 >
-                  Add Property
+                  {uploading ? "Uploading..." : "Add Property"}
                 </button>
               </div>
             </form>
@@ -1498,7 +1708,18 @@ export default function ManageLands() {
                             />
                           </svg>
                           <span className="text-sm truncate max-w-xs">
-                            {formData.brochure.name}
+                            {typeof formData.brochure === "string" ? (
+                              <a
+                                href={formData.brochure}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:text-primary-hover underline"
+                              >
+                                Current Brochure (PDF)
+                              </a>
+                            ) : (
+                              formData.brochure.name
+                            )}
                           </span>
                         </div>
                         <button
@@ -1586,19 +1807,50 @@ export default function ManageLands() {
                 </div>
               </div>
 
+              {/* Upload Progress */}
+              {uploading && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-700">
+                      Uploading files...
+                    </span>
+                    <span className="text-sm text-blue-600">
+                      {uploadProgress.current} / {uploadProgress.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width:
+                          uploadProgress.total > 0
+                            ? `${
+                                (uploadProgress.current /
+                                  uploadProgress.total) *
+                                100
+                              }%`
+                            : "0%",
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end mt-6">
                 <button
                   type="button"
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 mr-2"
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={closeModals}
+                  disabled={uploading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={uploading}
                 >
-                  Save Changes
+                  {uploading ? "Uploading..." : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -1639,9 +1891,17 @@ export default function ManageLands() {
                   <div className="mb-6">
                     <div className="bg-gray-100 rounded-md overflow-hidden h-48 mb-4">
                       <img
-                        src={currentProperty.images[0].url}
+                        src={
+                          typeof currentProperty.images[0] === "string"
+                            ? currentProperty.images[0]
+                            : currentProperty.images[0].url ||
+                              currentProperty.images[0].preview
+                        }
                         alt={
-                          currentProperty.images[0].alt || "Property main image"
+                          typeof currentProperty.images[0] === "object" &&
+                          currentProperty.images[0].alt
+                            ? currentProperty.images[0].alt
+                            : "Property main image"
                         }
                         className="w-full h-full object-cover"
                       />
@@ -1657,8 +1917,16 @@ export default function ManageLands() {
                               className="bg-gray-100 rounded-md overflow-hidden h-20"
                             >
                               <img
-                                src={image.url}
-                                alt={image.alt || `Property image ${index + 2}`}
+                                src={
+                                  typeof image === "string"
+                                    ? image
+                                    : image.url || image.preview
+                                }
+                                alt={
+                                  typeof image === "object" && image.alt
+                                    ? image.alt
+                                    : `Property image ${index + 2}`
+                                }
                                 className="w-full h-full object-cover"
                               />
                             </div>
@@ -1707,13 +1975,13 @@ export default function ManageLands() {
                   <div className="bg-gray-100 p-3 rounded-md">
                     <p className="text-xs text-gray-500">Type</p>
                     <p className="text-lg font-semibold">
-                      {currentProperty.type}
+                      {currentProperty.type || "N/A"}
                     </p>
                   </div>
                   <div className="bg-gray-100 p-3 rounded-md">
                     <p className="text-xs text-gray-500">Area</p>
                     <p className="text-lg font-semibold">
-                      {currentProperty.area}
+                      {currentProperty.size || currentProperty.area || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -1806,7 +2074,7 @@ export default function ManageLands() {
                     </div>
                   )}
 
-                {currentProperty.brochure && (
+                {currentProperty.brochureUrl && (
                   <div className="border-t border-gray-200 pt-4 mt-4">
                     <h3 className="text-lg font-semibold mb-2">Brochure</h3>
                     <div className="border border-gray-200 rounded-md p-3 flex items-center">
@@ -1825,7 +2093,14 @@ export default function ManageLands() {
                         />
                       </svg>
                       <span className="text-sm text-gray-600">
-                        {currentProperty.brochure.name}
+                        <a
+                          href={currentProperty.brochureUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:text-primary-hover underline"
+                        >
+                          View Brochure (PDF)
+                        </a>
                       </span>
                     </div>
                   </div>

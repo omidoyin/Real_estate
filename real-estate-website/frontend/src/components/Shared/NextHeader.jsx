@@ -16,8 +16,9 @@ export default function Header() {
   return (
     <header className="bg-white shadow-md py-4 sticky top-0 z-50 text-neutral">
       <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-primary">
-          Great Marcy
+        <Link href="/" className="text-2xl font-bold text-primary h-14 w-14">
+          {/* Great Marcy */}
+          <img src="/logo.jpg" alt="Great Marcy Logo" className=" object-cover h-full w-full "/>
         </Link>
 
         {/* Mobile menu button */}
@@ -52,19 +53,34 @@ export default function Header() {
 
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center space-x-6 text-neutral">
-          <Link href="/" className="hover:text-primary-text text-neutral font-bold">
+          <Link
+            href="/"
+            className="hover:text-primary-text text-neutral font-bold"
+          >
             Home
           </Link>
-          <Link href="/about" className="hover:text-primary-text text-neutral font-bold">
+          <Link
+            href="/about"
+            className="hover:text-primary-text text-neutral font-bold"
+          >
             About
           </Link>
-          <Link href="/portfolio" className="hover:text-primary-text text-neutral font-bold">
+          <Link
+            href="/portfolio"
+            className="hover:text-primary-text text-neutral font-bold"
+          >
             Portfolio
           </Link>
-          <Link href="/why-us" className="hover:text-primary-text text-neutral font-bold">
+          <Link
+            href="/why-us"
+            className="hover:text-primary-text text-neutral font-bold"
+          >
             Why Us
           </Link>
-          <Link href="/blog" className="hover:text-primary-text text-neutral font-bold">
+          <Link
+            href="/blog"
+            className="hover:text-primary-text text-neutral font-bold"
+          >
             Blog
           </Link>
           <Link
@@ -128,7 +144,10 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link href="/auth/login" className="hover:text-primary-text border border-primary text-primary px-4 py-2 rounded hover:bg-primary-hover">
+              <Link
+                href="/auth/login"
+                className="hover:text-primary-text border border-primary text-primary px-4 py-2 rounded hover:bg-primary-hover"
+              >
                 Login
               </Link>
               <Link
@@ -146,25 +165,37 @@ export default function Header() {
       {isMenuOpen && (
         <div className="md:hidden mt-4 px-4 py-2 bg-white shadow-md">
           <nav className="flex flex-col space-y-3">
-            <Link href="/" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
+            <Link
+              href="/"
+              className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3"
+            >
               Home
             </Link>
-            <Link href="/about" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
+            <Link
+              href="/about"
+              className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3"
+            >
               About
             </Link>
-            <Link href="/portfolio" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
+            <Link
+              href="/portfolio"
+              className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3"
+            >
               Portfolio
             </Link>
-            <Link href="/why-us" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
+            <Link
+              href="/why-us"
+              className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3"
+            >
               Why Us
             </Link>
-            <Link href="/blog" className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3">
+            <Link
+              href="/blog"
+              className="hover:text-primary-text text-neutral font-bold border-b border-gray-200 pb-3"
+            >
               Blog
             </Link>
-            <Link
-              href="/contact"
-              className="text-primary  hover:underline"
-            >
+            <Link href="/contact" className="text-primary  hover:underline">
               Contact Us
             </Link>
             <div className="pt-3 border-t border-gray-200 flex flex-col space-y-3">
@@ -222,10 +253,7 @@ export default function Header() {
                   <Link href="/auth/login" className=" hover:underline">
                     Login
                   </Link>
-                  <Link
-                    href="/auth/register"
-                    className="hover:underline"
-                  >
+                  <Link href="/auth/register" className="hover:underline">
                     Register
                   </Link>
                 </>

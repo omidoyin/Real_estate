@@ -2,6 +2,7 @@ const Land = require("../models/Land");
 const User = require("../models/User");
 const Favorite = require("../models/Favorite");
 const { getOptimizedUrls } = require("../utils/cloudinary");
+const cloudinary = require("cloudinary").v2;
 
 /**
  * Get all available lands with pagination and sorting
@@ -47,6 +48,47 @@ const getAvailableLands = async (req, res) => {
 };
 
 /**
+ * Get all lands for admin (including sold ones) with pagination and sorting
+ * @route GET /api/admin/lands
+ * @access Private/Admin
+ */
+const getAllLands = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const sortBy = req.query.sortBy || "createdAt";
+    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+
+    // Get all lands regardless of status
+    const lands = await Land.find({})
+      .sort({ [sortBy]: sortOrder })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Land.countDocuments({});
+
+    res.status(200).json({
+      success: true,
+      data: lands,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching all lands:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching all lands",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Get land details by ID
  * @route GET /api/lands/:id
  * @access Public
@@ -82,67 +124,63 @@ const getLandDetails = async (req, res) => {
  */
 const addLand = async (req, res) => {
   try {
+    console.log("=== ADD LAND DEBUG ===");
+    console.log("Request body:", req.body);
+    console.log("User:", req.user);
+
     const {
       title,
       location,
       price,
       size,
+      type,
       description,
       features,
       landmarks,
       documents,
+      images,
+      video,
+      brochureUrl,
     } = req.body;
 
-    // Process uploaded media files
-    let images = [];
-    let video = "";
-    let brochureUrl = "";
-
-    if (req.files) {
-      // Get optimized URLs for uploaded media
-      const mediaUrls = getOptimizedUrls(req.files);
-
-      // Filter images, video, and brochure
-      images = mediaUrls.filter(
-        (url) =>
-          url.endsWith(".jpg") ||
-          url.endsWith(".jpeg") ||
-          url.endsWith(".png") ||
-          url.endsWith(".gif")
-      );
-
-      const videos = mediaUrls.filter(
-        (url) =>
-          url.endsWith(".mp4") || url.endsWith(".mov") || url.endsWith(".avi")
-      );
-
-      if (videos.length > 0) {
-        video = videos[0]; // Use the first video
-      }
-
-      const brochures = mediaUrls.filter((url) => url.endsWith(".pdf"));
-
-      if (brochures.length > 0) {
-        brochureUrl = brochures[0]; // Use the first brochure
-      }
+    // Validate required fields
+    if (!title || !location || !price || !size || !description) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing required fields: title, location, price, size, description",
+      });
     }
 
     // Create new land
     const newLand = new Land({
       title,
       location,
-      price,
+      price: Number(price),
       size,
-      images,
-      video,
-      brochureUrl,
+      type: type || "Residential",
+      images: Array.isArray(images) ? images : images ? [images] : [],
+      video: video || "",
+      brochureUrl: brochureUrl || "",
       description,
-      features: features ? JSON.parse(features) : [],
-      landmarks: landmarks ? JSON.parse(landmarks) : [],
-      documents: documents ? JSON.parse(documents) : [],
+      features: Array.isArray(features) ? features : features ? [features] : [],
+      landmarks: Array.isArray(landmarks)
+        ? landmarks
+        : landmarks
+        ? [landmarks]
+        : [],
+      documents: Array.isArray(documents)
+        ? documents
+        : documents
+        ? [documents]
+        : [],
     });
 
+    console.log("Land object to save:", newLand);
+
     await newLand.save();
+
+    console.log("Land saved successfully:", newLand._id);
 
     res.status(201).json({
       success: true,
@@ -151,6 +189,10 @@ const addLand = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding land:", error);
+    console.error("Error details:", error.message);
+    if (error.name === "ValidationError") {
+      console.error("Validation errors:", error.errors);
+    }
     res.status(500).json({
       success: false,
       message: "Error adding land",
@@ -167,6 +209,9 @@ const addLand = async (req, res) => {
 const editLand = async (req, res) => {
   const { id } = req.params;
   try {
+    console.log("=== EDIT LAND DEBUG ===");
+    console.log("Edit land request body:", req.body);
+
     // Find land to update
     const land = await Land.findById(id);
     if (!land) {
@@ -176,56 +221,25 @@ const editLand = async (req, res) => {
       });
     }
 
-    // Process uploaded media files
-    if (req.files && req.files.length > 0) {
-      // Get optimized URLs for uploaded media
-      const mediaUrls = getOptimizedUrls(req.files);
+    // Prepare update data
+    const updateData = { ...req.body };
 
-      // Filter images, video, and brochure
-      const newImages = mediaUrls.filter(
-        (url) =>
-          url.endsWith(".jpg") ||
-          url.endsWith(".jpeg") ||
-          url.endsWith(".png") ||
-          url.endsWith(".gif")
-      );
-
-      if (newImages.length > 0) {
-        // Append new images to existing ones
-        req.body.images = [...land.images, ...newImages];
-      }
-
-      const videos = mediaUrls.filter(
-        (url) =>
-          url.endsWith(".mp4") || url.endsWith(".mov") || url.endsWith(".avi")
-      );
-
-      if (videos.length > 0) {
-        req.body.video = videos[0]; // Use the first video
-      }
-
-      const brochures = mediaUrls.filter((url) => url.endsWith(".pdf"));
-
-      if (brochures.length > 0) {
-        req.body.brochureUrl = brochures[0]; // Use the first brochure
-      }
+    // Ensure arrays are properly formatted
+    if (updateData.features && !Array.isArray(updateData.features)) {
+      updateData.features = [];
     }
-
-    // Parse JSON strings if they exist
-    if (req.body.features) {
-      req.body.features = JSON.parse(req.body.features);
+    if (updateData.landmarks && !Array.isArray(updateData.landmarks)) {
+      updateData.landmarks = [];
     }
-
-    if (req.body.landmarks) {
-      req.body.landmarks = JSON.parse(req.body.landmarks);
+    if (updateData.documents && !Array.isArray(updateData.documents)) {
+      updateData.documents = [];
     }
-
-    if (req.body.documents) {
-      req.body.documents = JSON.parse(req.body.documents);
+    if (updateData.images && !Array.isArray(updateData.images)) {
+      updateData.images = [];
     }
 
     // Update land
-    const updatedLand = await Land.findByIdAndUpdate(id, req.body, {
+    const updatedLand = await Land.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -564,8 +578,77 @@ const filterLands = async (req, res) => {
   }
 };
 
+/**
+ * Get Cloudinary signature for direct upload
+ * @route GET /api/lands/cloudinary-signature
+ * @access Private/Admin
+ */
+const getCloudinarySignature = async (req, res) => {
+  try {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = "real-estate/lands"; // Organize uploads in folders
+
+    // Parameters for the signature - MUST match exactly what Cloudinary expects
+    // Note: resource_type=auto is default and should NOT be included in signature
+    const params = {
+      folder: folder,
+      timestamp: timestamp,
+    };
+
+    console.log("=== CLOUDINARY SIGNATURE GENERATION ===");
+    console.log("Timestamp:", timestamp);
+    console.log("Folder:", folder);
+    console.log("Resource type: auto (NOT included in signature)");
+    console.log("Params for signature (sorted):", params);
+
+    // Manual verification of parameter string (for debugging)
+    const sortedKeys = Object.keys(params).sort();
+    const paramString = sortedKeys
+      .map((key) => `${key}=${params[key]}`)
+      .join("&");
+    console.log("Parameter string for signature:", paramString);
+    console.log(
+      "Parameter string + secret:",
+      paramString + process.env.CLOUDINARY_API_SECRET
+    );
+
+    // Generate signature using Cloudinary SDK (should handle sorting automatically)
+    const signature = cloudinary.utils.api_sign_request(
+      params,
+      process.env.CLOUDINARY_API_SECRET
+    );
+
+    console.log("Generated signature:", signature);
+    console.log("API Key:", process.env.CLOUDINARY_API_KEY);
+    console.log("Cloud Name:", process.env.CLOUDINARY_CLOUD_NAME);
+
+    const responseData = {
+      signature,
+      timestamp,
+      folder,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+    };
+
+    console.log("Sending response data:", responseData);
+
+    res.status(200).json({
+      success: true,
+      data: responseData,
+    });
+  } catch (error) {
+    console.error("Error generating Cloudinary signature:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error generating upload signature",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAvailableLands,
+  getAllLands,
   getLandDetails,
   addLand,
   editLand,
@@ -576,4 +659,5 @@ module.exports = {
   getUserPurchasedLands,
   searchLands,
   filterLands,
+  getCloudinarySignature,
 };

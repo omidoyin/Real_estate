@@ -8,6 +8,7 @@ import LoadingSpinner from "../../../components/Shared/LoadingSpinner";
 import { useToast } from "../../../hooks/useToast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getPortfolioPageData } from "../../../utils/api";
+import { safeImageUrl } from "../../../utils/dataHelpers";
 
 // Function to fetch data based on service type with server-side pagination and filtering
 async function fetchDataFromAPI(serviceType, filters, page = 1, limit = 6) {
@@ -28,11 +29,8 @@ async function fetchDataFromAPI(serviceType, filters, page = 1, limit = 6) {
       // Ensure each item has an id property (use _id from MongoDB)
       const id = item._id || item.id;
 
-      // Get the first image or use placeholder
-      const image =
-        item.images && item.images.length > 0
-          ? item.images[0]
-          : "/placeholder.jpg";
+      // Get the first image using safeImageUrl helper
+      const image = safeImageUrl(item.images, 0);
 
       // Return formatted item with consistent properties
       return {
@@ -280,21 +278,18 @@ export default function Portfolio() {
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
             >
               <div className="h-48 relative">
-                {item.image ? (
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{ objectFit: "cover" }}
-                    priority={pagination.page === 1 && item.id <= 3}
-                    loading={
-                      pagination.page === 1 && item.id <= 3 ? "eager" : "lazy"
-                    }
-                  />
-                ) : (
-                  <div className="h-48 bg-gray-300"></div>
-                )}
+                <Image
+                  src={safeImageUrl(item.image)}
+                  alt={item.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  style={{ objectFit: "cover" }}
+                  priority={pagination.page === 1 && item.id <= 3}
+                  loading={
+                    pagination.page === 1 && item.id <= 3 ? "eager" : "lazy"
+                  }
+                  className="rounded-t-lg"
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
@@ -351,21 +346,18 @@ export default function Portfolio() {
             className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
           >
             <div className="h-48 relative">
-              {item.image ? (
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  style={{ objectFit: "cover" }}
-                  priority={pagination.page === 1 && item.id <= 3}
-                  loading={
-                    pagination.page === 1 && item.id <= 3 ? "eager" : "lazy"
-                  }
-                />
-              ) : (
-                <div className="h-48 bg-gray-300"></div>
-              )}
+              <Image
+                src={safeImageUrl(item.image)}
+                alt={item.title}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                style={{ objectFit: "cover" }}
+                priority={pagination.page === 1 && item.id <= 3}
+                loading={
+                  pagination.page === 1 && item.id <= 3 ? "eager" : "lazy"
+                }
+                className="rounded-t-lg"
+              />
             </div>
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-2">{item.title}</h3>

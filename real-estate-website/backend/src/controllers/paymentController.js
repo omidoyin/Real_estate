@@ -549,11 +549,97 @@ const processPayment = async (req, res) => {
   }
 };
 
+/**
+ * Update a payment
+ * @route PUT /api/payments/:paymentId
+ * @access Private/Admin
+ */
+const updatePayment = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+    const { amount, method, status, notes } = req.body;
+
+    // Find the payment
+    const payment = await Payment.findById(paymentId);
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    // Update payment
+    const updatedPayment = await Payment.findByIdAndUpdate(
+      paymentId,
+      { amount, method, status, notes },
+      { new: true, runValidators: true }
+    ).populate([
+      {
+        path: "userId",
+        select: "name email",
+      },
+      {
+        path: "propertyId",
+        select: "title location price",
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: updatedPayment,
+      message: "Payment updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating payment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating payment",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Delete a payment
+ * @route DELETE /api/payments/:paymentId
+ * @access Private/Admin
+ */
+const deletePayment = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    // Find and delete the payment
+    const payment = await Payment.findByIdAndDelete(paymentId);
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payment deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting payment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting payment",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getPaymentHistory,
   getPaymentDetails,
   getAllPayments,
   addPayment,
+  updatePayment,
+  deletePayment,
   markPaymentCompleted,
   getPaymentPlan,
   updatePaymentPlan,

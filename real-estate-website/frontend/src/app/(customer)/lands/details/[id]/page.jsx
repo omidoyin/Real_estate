@@ -11,6 +11,7 @@ import {
 } from "../../../../../utils/api";
 import { isAuthenticated } from "../../../../../utils/auth";
 import { useToast } from "../../../../../hooks/useToast";
+import { safeImageUrl } from "../../../../../utils/dataHelpers";
 
 export default function LandDetails({ params }) {
   const [land, setLand] = useState(null);
@@ -129,18 +130,37 @@ export default function LandDetails({ params }) {
 
           <div className="mb-8">
             <div className="h-96 bg-gray-300 mb-4 relative">
-              {/* Main image placeholder */}
-              <div className="h-96 bg-gray-300"></div>
+              {land.images && land.images.length > 0 ? (
+                <Image
+                  src={safeImageUrl(land.images, 0)}
+                  alt={land.title}
+                  fill
+                  style={{ objectFit: "cover" }}
+                  priority
+                  className="rounded-lg"
+                />
+              ) : (
+                <div className="h-96 bg-gray-300 flex items-center justify-center rounded-lg">
+                  <span className="text-gray-500">No image available</span>
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              {land.images.map((image, index) => (
-                <div key={index} className="h-24 bg-gray-300 relative">
-                  {/* Thumbnail placeholder */}
-                  <div className="h-24 bg-gray-300"></div>
-                </div>
-              ))}
-            </div>
+            {land.images && land.images.length > 1 && (
+              <div className="grid grid-cols-3 gap-4">
+                {land.images.slice(1).map((image, index) => (
+                  <div key={index} className="h-24 bg-gray-300 relative">
+                    <Image
+                      src={safeImageUrl(image)}
+                      alt={`${land.title} - Image ${index + 2}`}
+                      fill
+                      style={{ objectFit: "cover" }}
+                      className="rounded-md"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
@@ -148,34 +168,77 @@ export default function LandDetails({ params }) {
               <h2 className="text-2xl font-bold mb-4">Property Details</h2>
               <p className="text-gray-700 mb-6">{land.description}</p>
 
-              <h3 className="text-xl font-bold mb-3">Features</h3>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
-                {land.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <svg
-                      className="w-5 h-5 text-primary-text mr-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+              {land.features && land.features.length > 0 && (
+                <>
+                  <h3 className="text-xl font-bold mb-3">Features</h3>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                    {land.features.map((feature, index) => {
+                      // Handle different feature data structures
+                      const featureText =
+                        typeof feature === "string"
+                          ? feature
+                          : feature?.name || feature?.title || "Feature";
 
-              <h3 className="text-xl font-bold mb-3">Nearby Landmarks</h3>
-              <ul className="mb-6">
-                {land.landmarks.map((landmark, index) => (
-                  <li key={index} className="mb-1">
-                    {landmark}
-                  </li>
-                ))}
-              </ul>
+                      return (
+                        <li key={index} className="flex items-center">
+                          <svg
+                            className="w-5 h-5 text-primary-text mr-2"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          {featureText}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+
+              {land.landmarks && land.landmarks.length > 0 && (
+                <>
+                  <h3 className="text-xl font-bold mb-3">Nearby Landmarks</h3>
+                  <ul className="mb-6">
+                    {land.landmarks.map((landmark, index) => {
+                      // Handle different landmark data structures
+                      const landmarkName =
+                        typeof landmark === "string"
+                          ? landmark
+                          : landmark?.name || "Unknown Location";
+                      const landmarkDistance =
+                        typeof landmark === "string"
+                          ? ""
+                          : landmark?.distance || "";
+
+                      return (
+                        <li
+                          key={landmark?._id || index}
+                          className="mb-1 flex items-center"
+                        >
+                          <svg
+                            className="w-4 h-4 text-primary mr-2"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          {landmarkName}
+                          {landmarkDistance && ` - ${landmarkDistance}`}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
 
               <h3 className="text-xl font-bold mb-3">Inspection Dates</h3>
               <ul className="mb-6">

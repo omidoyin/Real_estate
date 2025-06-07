@@ -1,6 +1,8 @@
 import axios from "axios";
 import { getCachedOrFetch } from "./cache";
 import { setAdminToken, removeAdminToken } from "./auth";
+import { smartCacheInvalidation } from "./cacheInvalidation";
+import Cookies from "js-cookie";
 
 // Utility function to check if we're in an admin page
 const isAdminPage = () => {
@@ -192,12 +194,15 @@ if (typeof window !== "undefined") {
     (config) => {
       // Check if we're in an admin page
       if (isAdminPage()) {
-        const adminToken = localStorage.getItem("adminToken");
+        // Try localStorage first, then cookies as fallback
+        const adminToken =
+          localStorage.getItem("adminToken") || Cookies.get("adminToken");
         if (adminToken) {
           config.headers.Authorization = `Bearer ${adminToken}`;
         }
       } else {
-        const token = localStorage.getItem("token");
+        // Try localStorage first, then cookies as fallback
+        const token = localStorage.getItem("token") || Cookies.get("token");
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -287,6 +292,12 @@ export const getAvailableLands = async (page = 1, limit = 10) => {
   );
 };
 
+// Get all lands for admin (including sold ones)
+export const getLands = async (page = 1, limit = 100) => {
+  const response = await api.get(`/admin/lands?page=${page}&limit=${limit}`);
+  return response.data;
+};
+
 export const searchLands = async (query, page = 1, limit = 10) => {
   const response = await api.get(
     `/lands/search?query=${query}&page=${page}&limit=${limit}`
@@ -315,51 +326,24 @@ export const filterLands = async (filters, page = 1, limit = 10) => {
 };
 
 export const getLandDetails = async (landId) => {
-  // Use caching for land details (10 minutes TTL)
+  // Use caching for land details (10 minutes TTL, persistent across sessions)
   return getCachedOrFetch(
     `land-details-${landId}`,
     async () => {
       const response = await api.get(`/lands/${landId}`);
       return response.data;
     },
-    10 * 60 * 1000
+    10 * 60 * 1000,
+    true // Make persistent
   );
 };
 
 // Add New Land
 export const addLand = async (landData) => {
-  // Create FormData for file uploads
-  const formData = new FormData();
-
-  // Add text fields
-  Object.keys(landData).forEach((key) => {
-    if (key !== "images" && key !== "video" && key !== "brochure") {
-      if (typeof landData[key] === "object") {
-        formData.append(key, JSON.stringify(landData[key]));
-      } else {
-        formData.append(key, landData[key]);
-      }
-    }
-  });
-
-  // Add media files
-  if (landData.images && landData.images.length) {
-    landData.images.forEach((image) => {
-      formData.append("media", image);
-    });
-  }
-
-  if (landData.video) {
-    formData.append("media", landData.video);
-  }
-
-  if (landData.brochure) {
-    formData.append("media", landData.brochure);
-  }
-
-  const response = await api.post("/lands", formData, {
+  // Send JSON data directly (images are now URLs from Cloudinary)
+  const response = await api.post("/lands", landData, {
     headers: {
-      "Content-Type": "multipart/form-data",
+      "Content-Type": "application/json",
     },
   });
   return response.data;
@@ -367,40 +351,10 @@ export const addLand = async (landData) => {
 
 // Edit Land
 export const editLand = async (landId, landData) => {
-  // Create FormData for file uploads
-  const formData = new FormData();
-
-  // Add text fields
-  Object.keys(landData).forEach((key) => {
-    if (key !== "images" && key !== "video" && key !== "brochure") {
-      if (typeof landData[key] === "object") {
-        formData.append(key, JSON.stringify(landData[key]));
-      } else {
-        formData.append(key, landData[key]);
-      }
-    }
-  });
-
-  // Add media files
-  if (landData.images && landData.images.length) {
-    landData.images.forEach((image) => {
-      if (image instanceof File) {
-        formData.append("media", image);
-      }
-    });
-  }
-
-  if (landData.video && landData.video instanceof File) {
-    formData.append("media", landData.video);
-  }
-
-  if (landData.brochure && landData.brochure instanceof File) {
-    formData.append("media", landData.brochure);
-  }
-
-  const response = await api.put(`/lands/${landId}`, formData, {
+  // Send JSON data directly (images are now URLs from Cloudinary)
+  const response = await api.put(`/lands/${landId}`, landData, {
     headers: {
-      "Content-Type": "multipart/form-data",
+      "Content-Type": "application/json",
     },
   });
   return response.data;
@@ -409,6 +363,12 @@ export const editLand = async (landId, landData) => {
 // Delete Land
 export const deleteLand = async (landId) => {
   const response = await api.delete(`/lands/${landId}`);
+  return response.data;
+};
+
+// Get Cloudinary signature for direct upload
+export const getCloudinarySignature = async () => {
+  const response = await api.get("/lands/cloudinary-signature");
   return response.data;
 };
 
@@ -441,12 +401,16 @@ export const getFavoriteLands = async () => {
 // Add Land to Favorites
 export const addLandToFavorites = async (landId) => {
   const response = await api.post(`/lands/favorites/${landId}`);
+  // Invalidate relevant cache
+  smartCacheInvalidation("favorite", "land", landId);
   return response.data;
 };
 
 // Remove Land from Favorites
 export const removeLandFromFavorites = async (landId) => {
   const response = await api.delete(`/lands/favorites/${landId}`);
+  // Invalidate relevant cache
+  smartCacheInvalidation("favorite", "land", landId);
   return response.data;
 };
 
@@ -474,6 +438,16 @@ export const processPayment = async (paymentData) => {
 // Admin payment functions
 export const addPayment = async (paymentData) => {
   const response = await api.post("/payments", paymentData);
+  return response.data;
+};
+
+export const updatePayment = async (paymentId, paymentData) => {
+  const response = await api.put(`/payments/${paymentId}`, paymentData);
+  return response.data;
+};
+
+export const deletePayment = async (paymentId) => {
+  const response = await api.delete(`/payments/${paymentId}`);
   return response.data;
 };
 
@@ -728,14 +702,15 @@ export const filterHouses = async (filters, page = 1, limit = 10) => {
 };
 
 export const getHouseDetails = async (houseId) => {
-  // Use caching for house details (10 minutes TTL)
+  // Use caching for house details (10 minutes TTL, persistent across sessions)
   return getCachedOrFetch(
     `house-details-${houseId}`,
     async () => {
       const response = await api.get(`/houses/${houseId}`);
       return response.data;
     },
-    10 * 60 * 1000
+    10 * 60 * 1000,
+    true // Make persistent
   );
 };
 
@@ -854,12 +829,16 @@ export const getFavoriteHouses = async () => {
 // Add House to Favorites
 export const addHouseToFavorites = async (houseId) => {
   const response = await api.post(`/houses/favorites/${houseId}`);
+  // Invalidate relevant cache
+  smartCacheInvalidation("favorite", "house", houseId);
   return response.data;
 };
 
 // Remove House from Favorites
 export const removeHouseFromFavorites = async (houseId) => {
   const response = await api.delete(`/houses/favorites/${houseId}`);
+  // Invalidate relevant cache
+  smartCacheInvalidation("favorite", "house", houseId);
   return response.data;
 };
 
@@ -910,14 +889,15 @@ export const filterApartments = async (filters, page = 1, limit = 10) => {
 };
 
 export const getApartmentDetails = async (apartmentId) => {
-  // Use caching for apartment details (10 minutes TTL)
+  // Use caching for apartment details (10 minutes TTL, persistent across sessions)
   return getCachedOrFetch(
     `apartment-details-${apartmentId}`,
     async () => {
       const response = await api.get(`/apartments/${apartmentId}`);
       return response.data;
     },
-    10 * 60 * 1000
+    10 * 60 * 1000,
+    true // Make persistent
   );
 };
 
@@ -1547,6 +1527,20 @@ export const updateUserRole = async (userId, role) => {
   });
 };
 
+export const addUser = async (userData) => {
+  return adminApiCall(async () => {
+    const response = await api.post("/admin/users", userData);
+    return response.data;
+  });
+};
+
+export const updateUser = async (userId, userData) => {
+  return adminApiCall(async () => {
+    const response = await api.put(`/admin/users/${userId}`, userData);
+    return response.data;
+  });
+};
+
 export const deleteUser = async (userId) => {
   return adminApiCall(async () => {
     const response = await api.delete(`/admin/users/${userId}`);
@@ -1562,6 +1556,93 @@ export const adminLogout = () => {
   if (typeof window !== "undefined") {
     window.location.replace("/admin/login");
   }
+};
+
+// Admin Houses Management (for admin pages)
+export const getAdminHouses = async (page = 1, limit = 100) => {
+  return adminApiCall(async () => {
+    const response = await api.get(`/houses?page=${page}&limit=${limit}`);
+    return response.data;
+  });
+};
+
+export const addAdminHouse = async (houseData) => {
+  return adminApiCall(async () => {
+    const response = await api.post("/houses", houseData);
+    return response.data;
+  });
+};
+
+export const editAdminHouse = async (id, houseData) => {
+  return adminApiCall(async () => {
+    const response = await api.put(`/houses/${id}`, houseData);
+    return response.data;
+  });
+};
+
+export const deleteAdminHouse = async (id) => {
+  return adminApiCall(async () => {
+    const response = await api.delete(`/houses/${id}`);
+    return response.data;
+  });
+};
+
+// Admin Apartments Management (for admin pages)
+export const getAdminApartments = async (page = 1, limit = 100) => {
+  return adminApiCall(async () => {
+    const response = await api.get(`/apartments?page=${page}&limit=${limit}`);
+    return response.data;
+  });
+};
+
+export const addAdminApartment = async (apartmentData) => {
+  return adminApiCall(async () => {
+    const response = await api.post("/apartments", apartmentData);
+    return response.data;
+  });
+};
+
+export const editAdminApartment = async (id, apartmentData) => {
+  return adminApiCall(async () => {
+    const response = await api.put(`/apartments/${id}`, apartmentData);
+    return response.data;
+  });
+};
+
+export const deleteAdminApartment = async (id) => {
+  return adminApiCall(async () => {
+    const response = await api.delete(`/apartments/${id}`);
+    return response.data;
+  });
+};
+
+// Admin Services Management
+export const getAdminServices = async (page = 1, limit = 100) => {
+  return adminApiCall(async () => {
+    const response = await api.get(`/services?page=${page}&limit=${limit}`);
+    return response.data;
+  });
+};
+
+export const addAdminService = async (serviceData) => {
+  return adminApiCall(async () => {
+    const response = await api.post("/services", serviceData);
+    return response.data;
+  });
+};
+
+export const editAdminService = async (id, serviceData) => {
+  return adminApiCall(async () => {
+    const response = await api.put(`/services/${id}`, serviceData);
+    return response.data;
+  });
+};
+
+export const deleteAdminService = async (id) => {
+  return adminApiCall(async () => {
+    const response = await api.delete(`/services/${id}`);
+    return response.data;
+  });
 };
 
 export default api;

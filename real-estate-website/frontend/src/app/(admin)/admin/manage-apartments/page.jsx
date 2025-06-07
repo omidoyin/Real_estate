@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getAdminApartments,
+  addAdminApartment,
+  editAdminApartment,
+  deleteAdminApartment,
+} from "../../../../utils/api";
 
 export default function ManageApartments() {
   const [properties, setProperties] = useState([]);
@@ -143,83 +149,115 @@ export default function ManageApartments() {
   };
 
   // Handle add property
-  const handleAddProperty = (e) => {
+  const handleAddProperty = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newProperty = {
-      id: properties.length + 1,
-      title: formData.title,
-      price: Number(formData.price),
-      status: formData.status,
-      bedrooms: Number(formData.bedrooms),
-      bathrooms: Number(formData.bathrooms),
-      floor: Number(formData.floor),
-      unit: formData.unit,
-      area: formData.area,
-      description: formData.description,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    try {
+      const apartmentData = {
+        title: formData.title,
+        price: Number(formData.price),
+        status: formData.status,
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        floor: Number(formData.floor),
+        unit: formData.unit,
+        size: formData.area,
+        description: formData.description,
+        location: "Location TBD", // Default location
+        images: [], // No images for now
+        features: [],
+        landmarks: [],
+      };
 
-    setProperties([...properties, newProperty]);
-    closeModals();
+      const response = await addAdminApartment(apartmentData);
 
-    // Show success message (in a real app)
-    alert("Apartment property added successfully!");
+      if (response.success) {
+        // Refresh the properties list
+        await fetchProperties();
+        closeModals();
+        alert("Apartment property added successfully!");
+      } else {
+        throw new Error(response.message || "Failed to add apartment");
+      }
+    } catch (error) {
+      console.error("Error adding apartment:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to add apartment: " + error.message);
+      }
+    }
   };
 
   // Handle edit property
-  const handleEditProperty = (e) => {
+  const handleEditProperty = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedProperties = properties.map((property) => {
-      if (property.id === currentProperty.id) {
-        return {
-          ...property,
-          title: formData.title,
-          price: Number(formData.price),
-          status: formData.status,
-          bedrooms: Number(formData.bedrooms),
-          bathrooms: Number(formData.bathrooms),
-          floor: Number(formData.floor),
-          unit: formData.unit,
-          area: formData.area,
-          description: formData.description,
-        };
+    try {
+      const apartmentData = {
+        title: formData.title,
+        price: Number(formData.price),
+        status: formData.status,
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        floor: Number(formData.floor),
+        unit: formData.unit,
+        size: formData.area,
+        description: formData.description,
+      };
+
+      const response = await editAdminApartment(
+        currentProperty.id,
+        apartmentData
+      );
+
+      if (response.success) {
+        // Refresh the properties list
+        await fetchProperties();
+        closeModals();
+        alert("Apartment property updated successfully!");
+      } else {
+        throw new Error(response.message || "Failed to update apartment");
       }
-      return property;
-    });
-
-    setProperties(updatedProperties);
-    closeModals();
-
-    // Show success message (in a real app)
-    alert("Apartment property updated successfully!");
+    } catch (error) {
+      console.error("Error updating apartment:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to update apartment: " + error.message);
+      }
+    }
   };
 
   // Handle delete property
-  const handleDeleteProperty = (propertyId) => {
+  const handleDeleteProperty = async (propertyId) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedProperties = properties.filter(
-        (property) => property.id !== propertyId
-      );
-      setProperties(updatedProperties);
+      try {
+        const response = await deleteAdminApartment(propertyId);
 
-      // Show success message (in a real app)
-      alert("Apartment property deleted successfully!");
+        if (response.success) {
+          // Refresh the properties list
+          await fetchProperties();
+          alert("Apartment property deleted successfully!");
+        } else {
+          throw new Error(response.message || "Failed to delete apartment");
+        }
+      } catch (error) {
+        console.error("Error deleting apartment:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to delete apartment: " + error.message);
+        }
+      }
     }
   };
 
@@ -236,82 +274,43 @@ export default function ManageApartments() {
       try {
         setLoading(true);
 
-        // In a real app, this would fetch from your API
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const response = await getAdminApartments();
 
-        const mockProperties = [
-          {
-            id: 1,
-            title: "Modern 2-Bedroom Apartment in Tower A",
-            price: 350000,
-            status: "Available",
-            bedrooms: 2,
-            bathrooms: 2,
-            floor: 5,
-            unit: "5A",
-            area: "1200 sqft",
-            createdAt: "2023-01-15",
-          },
-          {
-            id: 2,
-            title: "Luxury Penthouse in Tower B",
-            price: 750000,
-            status: "Sold",
-            bedrooms: 3,
-            bathrooms: 3.5,
-            floor: 15,
-            unit: "PH1",
-            area: "2500 sqft",
-            createdAt: "2023-02-20",
-          },
-          {
-            id: 3,
-            title: "Cozy 1-Bedroom Studio in Tower C",
-            price: 220000,
-            status: "Available",
-            bedrooms: 1,
-            bathrooms: 1,
-            floor: 3,
-            unit: "3C",
-            area: "800 sqft",
-            createdAt: "2023-03-10",
-          },
-          {
-            id: 4,
-            title: "Family Apartment in Tower D",
-            price: 450000,
-            status: "Available",
-            bedrooms: 3,
-            bathrooms: 2,
-            floor: 8,
-            unit: "8D",
-            area: "1800 sqft",
-            createdAt: "2023-04-05",
-          },
-          {
-            id: 5,
-            title: "Executive Apartment in Tower E",
-            price: 550000,
-            status: "Sold",
-            bedrooms: 2,
-            bathrooms: 2.5,
-            floor: 12,
-            unit: "12E",
-            area: "1600 sqft",
-            createdAt: "2023-01-01",
-          },
-        ];
+        if (!response.success) {
+          throw new Error("Failed to fetch apartments");
+        }
 
-        setProperties(mockProperties);
+        // Format the data to match the expected structure
+        const formattedProperties = response.data.map((apartment) => ({
+          id: apartment._id || apartment.id,
+          title: apartment.title,
+          price: apartment.price,
+          status: apartment.status,
+          bedrooms: apartment.bedrooms,
+          bathrooms: apartment.bathrooms,
+          floor: apartment.floor || 1,
+          unit: apartment.unit || "N/A",
+          area: apartment.size || apartment.area,
+          description: apartment.description,
+          createdAt: apartment.createdAt,
+        }));
+
+        setProperties(formattedProperties);
       } catch (error) {
         console.error("Error fetching properties:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to load apartments: " + error.message);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProperties();
+    fetchProperties().catch((error) => {
+      console.error("Error in useEffect fetchProperties:", error);
+    });
   }, [router]);
 
   if (loading) {

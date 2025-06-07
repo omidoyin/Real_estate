@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  getEstateManagementServices,
+  addService,
+  editService,
+  deleteService,
+} from "../../../../utils/api";
 
 export default function ManageEstateManagement() {
   const [services, setServices] = useState([]);
@@ -33,56 +39,39 @@ export default function ManageEstateManagement() {
 
     const fetchServices = async () => {
       try {
-        // In a real app, this would be an API call
-        // For now, we'll use mock data
-        const mockServices = [
-          {
-            id: 1,
-            title: "Residential Property Management",
-            propertyType: "Residential",
-            location: "City Center",
-            description:
-              "Complete management services for residential properties including tenant screening, rent collection, and maintenance coordination.",
-            price: "$200/month",
-            features:
-              "Tenant screening, Rent collection, Maintenance coordination, Regular inspections",
-            benefits:
-              "Reduced vacancy, Higher quality tenants, Reduced maintenance costs",
-            createdAt: "2023-01-15",
-          },
-          {
-            id: 2,
-            title: "Commercial Property Management",
-            propertyType: "Commercial",
-            location: "Business District",
-            description:
-              "Professional management services for commercial properties including lease administration, tenant relations, and facility maintenance.",
-            price: "$500/month",
-            features:
-              "Lease administration, Tenant relations, Facility maintenance, Financial reporting",
-            benefits:
-              "Maximized rental income, Reduced operational costs, Improved tenant satisfaction",
-            createdAt: "2023-02-20",
-          },
-          {
-            id: 3,
-            title: "Vacation Rental Management",
-            propertyType: "Vacation",
-            location: "Beachfront",
-            description:
-              "Comprehensive management of vacation rental properties including booking management, guest services, and property maintenance.",
-            price: "25% of rental income",
-            features:
-              "Booking management, Guest services, Cleaning coordination, Marketing",
-            benefits:
-              "Increased bookings, Higher rental rates, Positive reviews",
-            createdAt: "2023-03-10",
-          },
-        ];
+        setLoading(true);
 
-        setServices(mockServices);
+        const response = await getEstateManagementServices();
+
+        if (!response.success) {
+          throw new Error("Failed to fetch estate management services");
+        }
+
+        // Format the data to match the expected structure
+        const formattedServices = response.data.map((service) => ({
+          id: service._id || service.id,
+          title: service.title,
+          propertyType: service.propertyType,
+          location: service.location,
+          description: service.description,
+          price: service.price,
+          features: Array.isArray(service.features)
+            ? service.features.join(", ")
+            : service.features,
+          benefits: Array.isArray(service.benefits)
+            ? service.benefits.join(", ")
+            : service.benefits,
+          createdAt: service.createdAt,
+        }));
+
+        setServices(formattedServices);
       } catch (error) {
         console.error("Error fetching services:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to load services: " + error.message);
+        }
       } finally {
         setLoading(false);
       }
@@ -169,76 +158,169 @@ export default function ManageEstateManagement() {
   };
 
   // Handle add service
-  const handleAddService = (e) => {
+  const handleAddService = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newService = {
-      id: services.length + 1,
-      title: formData.title,
-      propertyType: formData.propertyType,
-      location: formData.location,
-      description: formData.description,
-      price: formData.price,
-      features: formData.features,
-      benefits: formData.benefits,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    try {
+      setLoading(true);
 
-    setServices([...services, newService]);
-    closeModals();
+      const serviceData = {
+        title: formData.title,
+        serviceType: "Estate Management",
+        propertyType: formData.propertyType,
+        location: formData.location,
+        description: formData.description,
+        price: formData.price,
+        features: formData.features
+          .split(",")
+          .map((f) => f.trim())
+          .filter((f) => f),
+        benefits: formData.benefits
+          .split(",")
+          .map((b) => b.trim())
+          .filter((b) => b),
+        status: "Active",
+      };
 
-    // Show success message (in a real app)
-    alert("Estate Management service added successfully!");
+      const response = await addService(serviceData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to add service");
+      }
+
+      // Format the new service to match the expected structure
+      const newService = {
+        id: response.data._id || response.data.id,
+        title: response.data.title,
+        propertyType: response.data.propertyType,
+        location: response.data.location,
+        description: response.data.description,
+        price: response.data.price,
+        features: Array.isArray(response.data.features)
+          ? response.data.features.join(", ")
+          : response.data.features,
+        benefits: Array.isArray(response.data.benefits)
+          ? response.data.benefits.join(", ")
+          : response.data.benefits,
+        createdAt: response.data.createdAt,
+      };
+
+      setServices([...services, newService]);
+      closeModals();
+      setFormData({
+        title: "",
+        propertyType: "Residential",
+        location: "",
+        description: "",
+        price: "",
+        features: "",
+        benefits: "",
+      });
+
+      alert("Estate Management service added successfully!");
+    } catch (error) {
+      console.error("Error adding service:", error);
+      alert("Failed to add service: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle edit service
-  const handleEditService = (e) => {
+  const handleEditService = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedServices = services.map((service) => {
-      if (service.id === currentService.id) {
-        return {
-          ...service,
-          title: formData.title,
-          propertyType: formData.propertyType,
-          location: formData.location,
-          description: formData.description,
-          price: formData.price,
-          features: formData.features,
-          benefits: formData.benefits,
-        };
+    try {
+      setLoading(true);
+
+      const serviceData = {
+        title: formData.title,
+        serviceType: "Estate Management",
+        propertyType: formData.propertyType,
+        location: formData.location,
+        description: formData.description,
+        price: formData.price,
+        features: formData.features
+          .split(",")
+          .map((f) => f.trim())
+          .filter((f) => f),
+        benefits: formData.benefits
+          .split(",")
+          .map((b) => b.trim())
+          .filter((b) => b),
+      };
+
+      const response = await editService(currentService.id, serviceData);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update service");
       }
-      return service;
-    });
 
-    setServices(updatedServices);
-    closeModals();
+      // Update the service in the state
+      const updatedServices = services.map((service) => {
+        if (service.id === currentService.id) {
+          return {
+            ...service,
+            title: response.data.title,
+            propertyType: response.data.propertyType,
+            location: response.data.location,
+            description: response.data.description,
+            price: response.data.price,
+            features: Array.isArray(response.data.features)
+              ? response.data.features.join(", ")
+              : response.data.features,
+            benefits: Array.isArray(response.data.benefits)
+              ? response.data.benefits.join(", ")
+              : response.data.benefits,
+          };
+        }
+        return service;
+      });
 
-    // Show success message (in a real app)
-    alert("Estate Management service updated successfully!");
+      setServices(updatedServices);
+      closeModals();
+
+      alert("Estate Management service updated successfully!");
+    } catch (error) {
+      console.error("Error updating service:", error);
+      alert("Failed to update service: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle delete service
-  const handleDeleteService = (id) => {
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedServices = services.filter((service) => service.id !== id);
-    setServices(updatedServices);
+  const handleDeleteService = async (id) => {
+    if (window.confirm("Are you sure you want to delete this service?")) {
+      try {
+        setLoading(true);
 
-    // Show success message (in a real app)
-    alert("Estate Management service deleted successfully!");
+        const response = await deleteService(id);
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to delete service");
+        }
+
+        // Remove the service from the state
+        const updatedServices = services.filter((service) => service.id !== id);
+        setServices(updatedServices);
+
+        alert("Estate Management service deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting service:", error);
+        alert("Failed to delete service: " + error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   if (loading) {

@@ -23,10 +23,15 @@ const landSchema = new mongoose.Schema(
       enum: ["Available", "Sold", "Reserved"],
       default: "Available",
     },
+    type: {
+      type: String,
+      enum: ["Residential", "Commercial", "Industrial", "Agricultural"],
+      default: "Residential",
+    },
     images: [
       {
         type: String,
-        required: true,
+        required: false,
       },
     ],
     video: {
@@ -61,11 +66,12 @@ const landSchema = new mongoose.Schema(
       {
         name: {
           type: String,
-          required: true,
+          required: false,
         },
         distance: {
           type: String,
-          required: true,
+          required: false,
+          default: "",
         },
       },
     ],
@@ -73,11 +79,11 @@ const landSchema = new mongoose.Schema(
       {
         name: {
           type: String,
-          required: true,
+          required: false,
         },
         url: {
           type: String,
-          required: true,
+          required: false,
         },
       },
     ],

@@ -2,6 +2,8 @@ const express = require("express");
 const {
   getPaymentHistory,
   addPayment,
+  updatePayment,
+  deletePayment,
   markPaymentCompleted,
   getPaymentDetails,
   getAllPayments,
@@ -27,6 +29,8 @@ router.get("/:paymentId", authMiddleware, getPaymentDetails);
 // Admin routes
 router.get("/", authMiddleware, adminMiddleware, getAllPayments);
 router.post("/", authMiddleware, adminMiddleware, addPayment);
+router.put("/:paymentId", authMiddleware, adminMiddleware, updatePayment);
+router.delete("/:paymentId", authMiddleware, adminMiddleware, deletePayment);
 router.patch(
   "/:paymentId/complete",
   authMiddleware,

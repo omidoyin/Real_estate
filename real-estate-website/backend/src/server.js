@@ -1,9 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const path = require("path");
 const app = require("./app");
 
-dotenv.config();
+// Environment variables are now loaded in app.js before any imports
 
 const PORT = process.env.PORT || 5000;
 

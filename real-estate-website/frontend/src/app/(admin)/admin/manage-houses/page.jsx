@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import Image from "next/image";
+import {
+  getAdminHouses,
+  addAdminHouse,
+  editAdminHouse,
+  deleteAdminHouse,
+} from "../../../../utils/api";
+import {
+  uploadImages,
+  validateImages,
+} from "../../../../utils/cloudinaryUpload";
 
 export default function ManageHouses() {
   const [properties, setProperties] = useState([]);
@@ -19,9 +30,20 @@ export default function ManageHouses() {
     bathrooms: "",
     area: "",
     description: "",
+    features: [],
+    landmarks: [],
+    images: [],
   });
   const [formErrors, setFormErrors] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({
+    current: 0,
+    total: 0,
+  });
   const router = useRouter();
+
+  // Refs for file inputs
+  const imageInputRef = useRef(null);
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -43,6 +65,102 @@ export default function ManageHouses() {
         [name]: "",
       });
     }
+  };
+
+  // Handle features
+  const addFeature = () => {
+    setFormData({
+      ...formData,
+      features: [...formData.features, ""],
+    });
+  };
+
+  const removeFeature = (index) => {
+    const newFeatures = formData.features.filter((_, i) => i !== index);
+    setFormData({
+      ...formData,
+      features: newFeatures,
+    });
+  };
+
+  const handleFeatureInput = (e, index) => {
+    const newFeatures = [...formData.features];
+    newFeatures[index] = e.target.value;
+    setFormData({
+      ...formData,
+      features: newFeatures,
+    });
+  };
+
+  // Handle landmarks
+  const addLandmark = () => {
+    setFormData({
+      ...formData,
+      landmarks: [...formData.landmarks, ""],
+    });
+  };
+
+  const removeLandmark = (index) => {
+    const newLandmarks = formData.landmarks.filter((_, i) => i !== index);
+    setFormData({
+      ...formData,
+      landmarks: newLandmarks,
+    });
+  };
+
+  const handleLandmarkInput = (e, index) => {
+    const newLandmarks = [...formData.landmarks];
+    newLandmarks[index] = e.target.value;
+    setFormData({
+      ...formData,
+      landmarks: newLandmarks,
+    });
+  };
+
+  // Handle image input
+  const handleImageInput = (e) => {
+    try {
+      if (e.target.files && e.target.files.length > 0) {
+        const newFiles = Array.from(e.target.files);
+
+        // Validate file types
+        const validFiles = newFiles.filter((file) => {
+          const isValidType = file.type.startsWith("image/");
+          if (!isValidType) {
+            console.warn(`Skipping invalid file type: ${file.type}`);
+          }
+          return isValidType;
+        });
+
+        if (validFiles.length === 0) {
+          alert("Please select valid image files.");
+          return;
+        }
+
+        // Create preview URLs for the images
+        const newImages = validFiles.map((file) => ({
+          file,
+          preview: URL.createObjectURL(file),
+        }));
+
+        setFormData({
+          ...formData,
+          images: [...formData.images, ...newImages],
+        });
+      }
+    } catch (error) {
+      console.error("Error handling image input:", error);
+      alert("Error processing images. Please try again.");
+    }
+  };
+
+  // Remove image
+  const removeImage = (index) => {
+    const newImages = formData.images.filter((_, i) => i !== index);
+    setFormData({
+      ...formData,
+      images: newImages,
+    });
   };
 
   // Validate form
@@ -89,6 +207,9 @@ export default function ManageHouses() {
       bathrooms: "",
       area: "",
       description: "",
+      features: [],
+      landmarks: [],
+      images: [],
     });
     setFormErrors({});
     setIsAddModalOpen(true);
@@ -105,6 +226,25 @@ export default function ManageHouses() {
       bathrooms: property.bathrooms,
       area: property.area,
       description: property.description || "",
+      features: Array.isArray(property.features)
+        ? property.features.filter((f) => typeof f === "string")
+        : [],
+      landmarks: Array.isArray(property.landmarks)
+        ? property.landmarks
+            .map((l) => {
+              // Handle both string and object formats
+              if (typeof l === "string") {
+                return l;
+              } else if (l && typeof l === "object" && l.name) {
+                return l.name;
+              }
+              return "";
+            })
+            .filter((l) => l.trim() !== "")
+        : [],
+      images: property.images
+        ? property.images.map((url) => ({ preview: url, isExisting: true }))
+        : [],
     });
     setFormErrors({});
     setIsEditModalOpen(true);
@@ -124,79 +264,258 @@ export default function ManageHouses() {
   };
 
   // Handle add property
-  const handleAddProperty = (e) => {
+  const handleAddProperty = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just add to the state
-    const newProperty = {
-      id: properties.length + 1,
-      title: formData.title,
-      price: Number(formData.price),
-      status: formData.status,
-      bedrooms: Number(formData.bedrooms),
-      bathrooms: Number(formData.bathrooms),
-      area: formData.area,
-      description: formData.description,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    setUploading(true);
+    setUploadProgress({ current: 0, total: 0 });
 
-    setProperties([...properties, newProperty]);
-    closeModals();
+    try {
+      // Prepare image files for upload
+      const imageFiles = formData.images
+        .filter((img) => img.file)
+        .map((img) => img.file);
 
-    // Show success message (in a real app)
-    alert("House property added successfully!");
+      // Validate images if any
+      if (imageFiles.length > 0) {
+        const imageErrors = validateImages(imageFiles);
+        if (imageErrors.length > 0) {
+          alert("Image validation errors:\n" + imageErrors.join("\n"));
+          return;
+        }
+      }
+
+      // Calculate total files to upload
+      const totalFiles = imageFiles.length;
+      setUploadProgress({ current: 0, total: totalFiles });
+
+      // Upload images to Cloudinary
+      let imageUrls = [];
+      if (imageFiles.length > 0) {
+        imageUrls = await uploadImages(imageFiles, (current, total) => {
+          setUploadProgress({ current, total: totalFiles });
+        });
+      }
+
+      // Prepare features and landmarks
+      const filteredFeatures = formData.features.filter(
+        (f) => typeof f === "string" && f.trim() !== ""
+      );
+      const filteredLandmarks = formData.landmarks
+        .filter((l) => typeof l === "string" && l.trim() !== "")
+        .map((landmark) => ({
+          name: landmark,
+          distance: "Distance TBD",
+        }));
+
+      const houseData = {
+        title: formData.title,
+        price: Number(formData.price),
+        status: formData.status,
+        propertyType: "Detached", // Default property type
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        size: formData.area,
+        description: formData.description,
+        location: "Location TBD", // Default location
+        images: imageUrls,
+        features: JSON.stringify(filteredFeatures),
+        landmarks: JSON.stringify(filteredLandmarks),
+      };
+
+      const response = await addAdminHouse(houseData);
+
+      if (response.success) {
+        // Refresh the properties list
+        await fetchProperties();
+        closeModals();
+        alert("House property added successfully!");
+      } else {
+        throw new Error(response.message || "Failed to add house");
+      }
+    } catch (error) {
+      console.error("Error adding house:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to add house: " + error.message);
+      }
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Handle edit property
-  const handleEditProperty = (e) => {
+  const handleEditProperty = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // In a real app, this would be an API call
-    // For demo purposes, just update the state
-    const updatedProperties = properties.map((property) => {
-      if (property.id === currentProperty.id) {
-        return {
-          ...property,
-          title: formData.title,
-          price: Number(formData.price),
-          status: formData.status,
-          bedrooms: Number(formData.bedrooms),
-          bathrooms: Number(formData.bathrooms),
-          area: formData.area,
-          description: formData.description,
-        };
+    setUploading(true);
+    setUploadProgress({ current: 0, total: 0 });
+
+    try {
+      // Separate new images from existing ones
+      const newImageFiles = formData.images
+        .filter((img) => img.file && !img.isExisting)
+        .map((img) => img.file);
+      const existingImageUrls = formData.images
+        .filter((img) => img.isExisting)
+        .map((img) => img.preview);
+
+      // Validate new images if any
+      if (newImageFiles.length > 0) {
+        const imageErrors = validateImages(newImageFiles);
+        if (imageErrors.length > 0) {
+          alert("Image validation errors:\n" + imageErrors.join("\n"));
+          return;
+        }
       }
-      return property;
-    });
 
-    setProperties(updatedProperties);
-    closeModals();
+      // Calculate total files to upload
+      const totalFiles = newImageFiles.length;
+      setUploadProgress({ current: 0, total: totalFiles });
 
-    // Show success message (in a real app)
-    alert("House property updated successfully!");
+      // Upload new images to Cloudinary
+      let newImageUrls = [];
+      if (newImageFiles.length > 0) {
+        newImageUrls = await uploadImages(newImageFiles, (current, total) => {
+          setUploadProgress({ current, total: totalFiles });
+        });
+      }
+
+      // Combine existing and new image URLs
+      const allImageUrls = [...existingImageUrls, ...newImageUrls];
+
+      // Prepare features and landmarks
+      const filteredFeatures = formData.features.filter(
+        (f) => typeof f === "string" && f.trim() !== ""
+      );
+      const filteredLandmarks = formData.landmarks
+        .filter((l) => typeof l === "string" && l.trim() !== "")
+        .map((landmark) => ({
+          name: landmark,
+          distance: "Distance TBD",
+        }));
+
+      const houseData = {
+        title: formData.title,
+        price: Number(formData.price),
+        status: formData.status,
+        propertyType: currentProperty.propertyType || "Detached", // Keep existing or default
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        size: formData.area,
+        description: formData.description,
+        location: currentProperty.location || "Location TBD", // Keep existing or default
+        images: allImageUrls,
+        features: JSON.stringify(filteredFeatures),
+        landmarks: JSON.stringify(filteredLandmarks),
+      };
+
+      const response = await editAdminHouse(currentProperty.id, houseData);
+
+      if (response.success) {
+        // Refresh the properties list
+        await fetchProperties();
+        closeModals();
+        alert("House property updated successfully!");
+      } else {
+        throw new Error(response.message || "Failed to update house");
+      }
+    } catch (error) {
+      console.error("Error updating house:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to update house: " + error.message);
+      }
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Handle delete property
-  const handleDeleteProperty = (propertyId) => {
+  const handleDeleteProperty = async (propertyId) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
-      // In a real app, this would be an API call
-      // For demo purposes, just update the state
-      const updatedProperties = properties.filter(
-        (property) => property.id !== propertyId
-      );
-      setProperties(updatedProperties);
+      try {
+        const response = await deleteAdminHouse(propertyId);
 
-      // Show success message (in a real app)
-      alert("House property deleted successfully!");
+        if (response.success) {
+          // Refresh the properties list
+          await fetchProperties();
+          alert("House property deleted successfully!");
+        } else {
+          throw new Error(response.message || "Failed to delete house");
+        }
+      } catch (error) {
+        console.error("Error deleting house:", error);
+        if (error.message === "Access denied. No token provided.") {
+          router.push("/admin/login");
+        } else {
+          alert("Failed to delete house: " + error.message);
+        }
+      }
+    }
+  };
+
+  // Fetch properties data
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+
+      const response = await getAdminHouses();
+
+      if (!response.success) {
+        throw new Error("Failed to fetch houses");
+      }
+
+      // Format the data to match the expected structure
+      const formattedProperties = response.data.map((house) => ({
+        id: house._id || house.id,
+        title: house.title,
+        price: house.price,
+        status: house.status,
+        bedrooms: house.bedrooms,
+        bathrooms: house.bathrooms,
+        area: house.size || house.area,
+        description: house.description,
+        features: Array.isArray(house.features)
+          ? house.features.filter((f) => typeof f === "string")
+          : [],
+        landmarks: Array.isArray(house.landmarks)
+          ? house.landmarks
+              .map((l) => {
+                // Handle both string and object formats
+                if (typeof l === "string") {
+                  return l;
+                } else if (l && typeof l === "object" && l.name) {
+                  return l.name;
+                }
+                return "";
+              })
+              .filter((l) => l.trim() !== "")
+          : [],
+        images: Array.isArray(house.images) ? house.images : [],
+        createdAt: house.createdAt,
+      }));
+
+      setProperties(formattedProperties);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      if (error.message === "Access denied. No token provided.") {
+        router.push("/admin/login");
+      } else {
+        alert("Failed to load houses: " + error.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -208,77 +527,9 @@ export default function ManageHouses() {
       return;
     }
 
-    // Fetch properties data
-    const fetchProperties = async () => {
-      try {
-        setLoading(true);
-
-        // In a real app, this would fetch from your API
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const mockProperties = [
-          {
-            id: 1,
-            title: "Modern 3-Bedroom House in Location A",
-            price: 450000,
-            status: "Available",
-            bedrooms: 3,
-            bathrooms: 2,
-            area: "2200 sqft",
-            createdAt: "2023-01-15",
-          },
-          {
-            id: 2,
-            title: "Luxury Villa in Location B",
-            price: 850000,
-            status: "Sold",
-            bedrooms: 5,
-            bathrooms: 4.5,
-            area: "4500 sqft",
-            createdAt: "2023-02-20",
-          },
-          {
-            id: 3,
-            title: "Cozy 2-Bedroom House in Location C",
-            price: 320000,
-            status: "Available",
-            bedrooms: 2,
-            bathrooms: 1,
-            area: "1500 sqft",
-            createdAt: "2023-03-10",
-          },
-          {
-            id: 4,
-            title: "Family Home in Location D",
-            price: 550000,
-            status: "Available",
-            bedrooms: 4,
-            bathrooms: 3,
-            area: "2800 sqft",
-            createdAt: "2023-04-05",
-          },
-          {
-            id: 5,
-            title: "Executive Home in Location E",
-            price: 750000,
-            status: "Sold",
-            bedrooms: 4,
-            bathrooms: 3.5,
-            area: "3200 sqft",
-            createdAt: "2023-01-01",
-          },
-        ];
-
-        setProperties(mockProperties);
-      } catch (error) {
-        console.error("Error fetching properties:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProperties();
+    fetchProperties().catch((error) => {
+      console.error("Error in useEffect fetchProperties:", error);
+    });
   }, [router]);
 
   if (loading) {
@@ -399,7 +650,7 @@ export default function ManageHouses() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      className="text-primary hover:text-primary-text mr-3"
+                      className="text-primary-text hover:text-primary-text mr-3"
                       onClick={() => openEditModal(property)}
                     >
                       Edit
@@ -421,7 +672,7 @@ export default function ManageHouses() {
       {/* Add House Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Add New House</h2>
               <button
@@ -446,170 +697,369 @@ export default function ManageHouses() {
             </div>
 
             <form onSubmit={handleAddProperty}>
-              <div className="mb-4">
-                <label
-                  htmlFor="title"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                    formErrors.title ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.title && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.title}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  htmlFor="price"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Price ($)
-                </label>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                    formErrors.price ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.price && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.price}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label
-                    htmlFor="bedrooms"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Bedrooms
+                  {/* Basic Information Section */}
+                  <h3 className="text-lg font-semibold mb-4">
+                    Basic Information
+                  </h3>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="title"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Title*
+                    </label>
+                    <input
+                      type="text"
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.title ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.title && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.title}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="price"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Price ($)*
+                    </label>
+                    <input
+                      type="number"
+                      id="price"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.price ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.price && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.price}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label
+                        htmlFor="bedrooms"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Bedrooms*
+                      </label>
+                      <input
+                        type="number"
+                        id="bedrooms"
+                        name="bedrooms"
+                        value={formData.bedrooms}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                          formErrors.bedrooms
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.bedrooms && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {formErrors.bedrooms}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="bathrooms"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Bathrooms*
+                      </label>
+                      <input
+                        type="number"
+                        id="bathrooms"
+                        name="bathrooms"
+                        value={formData.bathrooms}
+                        onChange={handleInputChange}
+                        step="0.5"
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                          formErrors.bathrooms
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.bathrooms && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {formErrors.bathrooms}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label
+                        htmlFor="status"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Status
+                      </label>
+                      <select
+                        id="status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="Available">Available</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Reserved">Reserved</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="area"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Area*
+                      </label>
+                      <input
+                        type="text"
+                        id="area"
+                        name="area"
+                        value={formData.area}
+                        onChange={handleInputChange}
+                        placeholder="e.g., 2000 sqft"
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                          formErrors.area ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.area && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {formErrors.area}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label
+                      htmlFor="description"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Description
+                    </label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows="4"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div>
+                  {/* Features Section */}
+                  <h3 className="text-lg font-semibold mb-4">
+                    Features & Landmarks
+                  </h3>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Features
+                    </label>
+                    {formData.features.map((feature, index) => (
+                      <div key={index} className="flex mb-2">
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={(e) => handleFeatureInput(e, index)}
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="e.g., Swimming Pool"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFeature(index)}
+                          className="ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addFeature}
+                      className="mt-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add Feature
+                    </button>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Nearby Landmarks
+                    </label>
+                    {formData.landmarks.map((landmark, index) => (
+                      <div key={index} className="flex mb-2">
+                        <input
+                          type="text"
+                          value={landmark}
+                          onChange={(e) => handleLandmarkInput(e, index)}
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="e.g., Shopping Mall (2km)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeLandmark(index)}
+                          className="ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addLandmark}
+                      className="mt-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add Landmark
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Images Section */}
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">Property Images</h3>
+
+                <div className="mb-6">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    House Images
                   </label>
-                  <input
-                    type="number"
-                    id="bedrooms"
-                    name="bedrooms"
-                    value={formData.bedrooms}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                      formErrors.bedrooms ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {formErrors.bedrooms && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {formErrors.bedrooms}
-                    </p>
+                  <div className="mb-2">
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      onChange={handleImageInput}
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current.click()}
+                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Upload Images
+                    </button>
+                  </div>
+
+                  {formData.images.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {formData.images.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-video bg-gray-100 rounded-md overflow-hidden">
+                            <img
+                              src={img.preview}
+                              alt={`Preview ${index}`}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-
-                <div>
-                  <label
-                    htmlFor="bathrooms"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Bathrooms
-                  </label>
-                  <input
-                    type="number"
-                    id="bathrooms"
-                    name="bathrooms"
-                    value={formData.bathrooms}
-                    onChange={handleInputChange}
-                    step="0.5"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                      formErrors.bathrooms
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  />
-                  {formErrors.bathrooms && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {formErrors.bathrooms}
-                    </p>
-                  )}
-                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label
-                    htmlFor="status"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Status
-                  </label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="Available">Available</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Reserved">Reserved</option>
-                  </select>
+              {/* Upload Progress */}
+              {uploading && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-700">
+                      Uploading files...
+                    </span>
+                    <span className="text-sm text-blue-600">
+                      {uploadProgress.current} / {uploadProgress.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width:
+                          uploadProgress.total > 0
+                            ? `${
+                                (uploadProgress.current /
+                                  uploadProgress.total) *
+                                100
+                              }%`
+                            : "0%",
+                      }}
+                    ></div>
+                  </div>
                 </div>
-
-                <div>
-                  <label
-                    htmlFor="area"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Area
-                  </label>
-                  <input
-                    type="text"
-                    id="area"
-                    name="area"
-                    value={formData.area}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 2000 sqft"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                      formErrors.area ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {formErrors.area && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {formErrors.area}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label
-                  htmlFor="description"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                ></textarea>
-              </div>
+              )}
 
               <div className="flex justify-end">
                 <button
@@ -634,7 +1084,7 @@ export default function ManageHouses() {
       {/* Edit House Modal */}
       {isEditModalOpen && currentProperty && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Edit House</h2>
               <button
@@ -659,170 +1109,369 @@ export default function ManageHouses() {
             </div>
 
             <form onSubmit={handleEditProperty}>
-              <div className="mb-4">
-                <label
-                  htmlFor="edit-title"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id="edit-title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                    formErrors.title ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.title && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.title}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  htmlFor="edit-price"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Price ($)
-                </label>
-                <input
-                  type="number"
-                  id="edit-price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                    formErrors.price ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {formErrors.price && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.price}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label
-                    htmlFor="edit-bedrooms"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Bedrooms
+                  {/* Basic Information Section */}
+                  <h3 className="text-lg font-semibold mb-4">
+                    Basic Information
+                  </h3>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="edit-title"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Title*
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.title ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.title && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.title}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="edit-price"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Price ($)*
+                    </label>
+                    <input
+                      type="number"
+                      id="edit-price"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.price ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {formErrors.price && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.price}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label
+                        htmlFor="edit-bedrooms"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Bedrooms*
+                      </label>
+                      <input
+                        type="number"
+                        id="edit-bedrooms"
+                        name="bedrooms"
+                        value={formData.bedrooms}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                          formErrors.bedrooms
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.bedrooms && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {formErrors.bedrooms}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="edit-bathrooms"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Bathrooms*
+                      </label>
+                      <input
+                        type="number"
+                        id="edit-bathrooms"
+                        name="bathrooms"
+                        value={formData.bathrooms}
+                        onChange={handleInputChange}
+                        step="0.5"
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                          formErrors.bathrooms
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.bathrooms && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {formErrors.bathrooms}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label
+                        htmlFor="edit-status"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Status
+                      </label>
+                      <select
+                        id="edit-status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="Available">Available</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Reserved">Reserved</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="edit-area"
+                        className="block text-gray-700 font-medium mb-2"
+                      >
+                        Area*
+                      </label>
+                      <input
+                        type="text"
+                        id="edit-area"
+                        name="area"
+                        value={formData.area}
+                        onChange={handleInputChange}
+                        placeholder="e.g., 2000 sqft"
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                          formErrors.area ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.area && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {formErrors.area}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label
+                      htmlFor="edit-description"
+                      className="block text-gray-700 font-medium mb-2"
+                    >
+                      Description
+                    </label>
+                    <textarea
+                      id="edit-description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows="4"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div>
+                  {/* Features Section */}
+                  <h3 className="text-lg font-semibold mb-4">
+                    Features & Landmarks
+                  </h3>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Features
+                    </label>
+                    {formData.features.map((feature, index) => (
+                      <div key={index} className="flex mb-2">
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={(e) => handleFeatureInput(e, index)}
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="e.g., Swimming Pool"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFeature(index)}
+                          className="ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addFeature}
+                      className="mt-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add Feature
+                    </button>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Nearby Landmarks
+                    </label>
+                    {formData.landmarks.map((landmark, index) => (
+                      <div key={index} className="flex mb-2">
+                        <input
+                          type="text"
+                          value={landmark}
+                          onChange={(e) => handleLandmarkInput(e, index)}
+                          className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="e.g., Shopping Mall (2km)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeLandmark(index)}
+                          className="ml-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addLandmark}
+                      className="mt-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Add Landmark
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Images Section */}
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">Property Images</h3>
+
+                <div className="mb-6">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    House Images
                   </label>
-                  <input
-                    type="number"
-                    id="edit-bedrooms"
-                    name="bedrooms"
-                    value={formData.bedrooms}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                      formErrors.bedrooms ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {formErrors.bedrooms && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {formErrors.bedrooms}
-                    </p>
+                  <div className="mb-2">
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      onChange={handleImageInput}
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current.click()}
+                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                    >
+                      Upload Images
+                    </button>
+                  </div>
+
+                  {formData.images.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {formData.images.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-video bg-gray-100 rounded-md overflow-hidden">
+                            <img
+                              src={img.preview}
+                              alt={`Preview ${index}`}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-
-                <div>
-                  <label
-                    htmlFor="edit-bathrooms"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Bathrooms
-                  </label>
-                  <input
-                    type="number"
-                    id="edit-bathrooms"
-                    name="bathrooms"
-                    value={formData.bathrooms}
-                    onChange={handleInputChange}
-                    step="0.5"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                      formErrors.bathrooms
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  />
-                  {formErrors.bathrooms && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {formErrors.bathrooms}
-                    </p>
-                  )}
-                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label
-                    htmlFor="edit-status"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Status
-                  </label>
-                  <select
-                    id="edit-status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="Available">Available</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Reserved">Reserved</option>
-                  </select>
+              {/* Upload Progress */}
+              {uploading && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-700">
+                      Uploading files...
+                    </span>
+                    <span className="text-sm text-blue-600">
+                      {uploadProgress.current} / {uploadProgress.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width:
+                          uploadProgress.total > 0
+                            ? `${
+                                (uploadProgress.current /
+                                  uploadProgress.total) *
+                                100
+                              }%`
+                            : "0%",
+                      }}
+                    ></div>
+                  </div>
                 </div>
-
-                <div>
-                  <label
-                    htmlFor="edit-area"
-                    className="block text-gray-700 font-medium mb-2"
-                  >
-                    Area
-                  </label>
-                  <input
-                    type="text"
-                    id="edit-area"
-                    name="area"
-                    value={formData.area}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 2000 sqft"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-                      formErrors.area ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {formErrors.area && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {formErrors.area}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label
-                  htmlFor="edit-description"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="edit-description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                ></textarea>
-              </div>
+              )}
 
               <div className="flex justify-end">
                 <button
